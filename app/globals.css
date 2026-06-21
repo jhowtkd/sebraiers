@@ -1,0 +1,142 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    @apply min-h-full bg-surface-canvas text-text-primary antialiased;
+    font-family: var(--font-family);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-text-primary;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  /* Foco visível — WCAG 2.4.7 — nunca remover */
+  :focus-visible {
+    outline: 3px solid var(--brand-azul);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+
+  /* Tabular nums para números — pontuação/ranking */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* sr-only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Reduced motion — WCAG 2.3.3 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Container padrão — Brandbook 07-spacing-grid */
+  .container-app {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-app {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-app {
+      padding-inline: 2rem;
+    }
+  }
+
+  .container-narrow {
+    width: 100%;
+    max-width: var(--container-narrow);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-narrow {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* Skeleton com shimmer */
+  .skeleton {
+    @apply rounded-md bg-surface-sunken;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Gradientes oficiais */
+  .bg-gradient-azul-taiti {
+    background: var(--gradient-azul-taiti);
+  }
+  .bg-gradient-atlantico-ceu {
+    background: var(--gradient-atlantico-ceu);
+  }
+  .bg-gradient-ceu-begonia {
+    background: var(--gradient-ceu-begonia);
+  }
+  .bg-gradient-canario-umbu {
+    background: var(--gradient-canario-umbu);
+  }
+}
