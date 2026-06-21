@@ -2,21 +2,35 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
-import { getPostById } from '@/lib/queries/posts';
+import { createClient } from '@/lib/supabase/server';
+import { getPostById, getPostEngagement } from '@/lib/queries/posts';
 import { getMyCheckinsForPost } from '@/lib/queries/checkins';
 import { Card, CardBody } from '@/components/ui/card';
 import { CheckinButtons } from '@/components/posts/checkin-buttons';
 import { NetworkIcon } from '@/components/ui/network-icon';
+import { ReactionBar } from '@/components/social/reaction-bar';
+import { Comments, type Comment } from '@/components/social/comments';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await params;
   const post = await getPostById(id);
   if (!post) notFound();
-  const mine = await getMyCheckinsForPost(id);
+  const [mine, engagement, supabase] = await Promise.all([
+    getMyCheckinsForPost(id),
+    getPostEngagement(id, user.id),
+    createClient(),
+  ]);
   const existing = mine.map((c) => ({ action: c.action, status: c.status }));
+
+  const { data: postComments } = await supabase
+    .from('post_comments')
+    .select('id, body, created_at, user:profiles!post_comments_user_id_fkey(full_name, username, avatar_url)')
+    .eq('post_id', id)
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -51,6 +65,17 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
             Clique em cada ação que você realizou. O admin valida e seus pontos entram no ranking após aprovação.
           </p>
           <CheckinButtons postId={post.id} existing={existing} />
+        </CardBody>
+      </Card>
+      <Card id="conversa">
+        <CardBody className="space-y-5">
+          <ReactionBar target="post" targetId={post.id} engagement={engagement} />
+          <Comments
+            target="post"
+            postId={post.id}
+            comments={(postComments ?? []) as unknown as Comment[]}
+            currentUserId={user.id}
+          />
         </CardBody>
       </Card>
     </div>

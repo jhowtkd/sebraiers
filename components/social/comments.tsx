@@ -3,7 +3,7 @@ import { formatRelative, initials } from '@/lib/utils';
 import { CommentForm } from './comment-form';
 import { MessageCircle } from 'lucide-react';
 
-type Comment = {
+export type Comment = {
   id: string;
   body: string;
   created_at: string;
