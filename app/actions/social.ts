@@ -10,7 +10,7 @@ import {
 } from '@/lib/validation';
 import type { ActionResult } from '@/app/actions/auth';
 
-export type ReactionState = string | null;
+type ReactionState = string | null;
 export type SocialActionResult = ActionResult & { reaction?: ReactionState };
 
 async function getUserId(): Promise<string | null> {

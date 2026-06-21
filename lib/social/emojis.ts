@@ -11,11 +11,3 @@ export const CHECKIN_REACTIONS = {
   clap: { emoji: '👏', label: 'Tamo junto' },
 } as const;
 export type CheckinReactionKind = keyof typeof CHECKIN_REACTIONS;
-
-export function isPostReactionKind(v: string): v is PostReactionKind {
-  return v in POST_REACTIONS;
-}
-
-export function isCheckinReactionKind(v: string): v is CheckinReactionKind {
-  return v in CHECKIN_REACTIONS;
-}

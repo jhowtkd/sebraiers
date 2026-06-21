@@ -74,7 +74,6 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
             target="post"
             postId={post.id}
             comments={(postComments ?? []) as unknown as Comment[]}
-            currentUserId={user.id}
           />
         </CardBody>
       </Card>

@@ -64,7 +64,6 @@ export default async function MyPerformancePage() {
         <CheckinHistoryList
           items={itemList}
           engagementMap={engagementMap}
-          currentUserId={user.id}
         />
       </div>
     </div>

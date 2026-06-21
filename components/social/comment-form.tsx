@@ -60,7 +60,6 @@ export function CommentForm({
       <input type="hidden" name="body" value={body} />
       <div className="flex-1">
         <Input
-          name="_display"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={target === 'post' ? 'Fala aí...' : 'Deixa um elogio'}

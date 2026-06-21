@@ -20,7 +20,6 @@ export function Comments({
   postId?: string;
   checkinId?: string;
   comments: Comment[];
-  currentUserId: string;
 }) {
   return (
     <div className="space-y-3">

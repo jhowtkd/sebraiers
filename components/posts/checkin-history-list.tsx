@@ -24,11 +24,9 @@ type Item = {
 export function CheckinHistoryList({
   items,
   engagementMap,
-  currentUserId,
 }: {
   items: Item[];
   engagementMap: Map<string, CheckinEngagement>;
-  currentUserId: string;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -96,7 +94,6 @@ export function CheckinHistoryList({
                         target="checkin"
                         checkinId={it.id}
                         comments={engagement.comments}
-                        currentUserId={currentUserId}
                       />
                     </div>
                   )}
