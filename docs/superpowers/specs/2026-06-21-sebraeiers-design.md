@@ -210,11 +210,24 @@ Refreshed após cada aprovação/rejeição via trigger.
 | Compartilhamento (`share`) | 3 |
 
 - Pontos entram no ranking **apenas** com `status='approved'`.
-- Ranking ordenado: `total_points DESC, last_approved_at DESC`.
+- Ranking ordenado: `total_points DESC, last_approved_at DESC, username ASC` (desempate terciário alfabético — estável e justo).
 
 ## 8. Redes sociais suportadas
 
 `instagram`, `linkedin`, `facebook`, `tiktok`, `youtube`, `threads`. Cada `post.network` é uma dessas; cada `user_socials.*` armazena o **handle** (ex: `@sebraego`) — não a URL completa. O app concatena a URL pública ao montar o link de destino.
+
+**Mapeamento rede → URL base:**
+
+| Rede | Handle armazenado | URL construída |
+|---|---|---|
+| instagram | `sebraego` | `https://instagram.com/sebraego` |
+| linkedin | `sebrae-goias` | `https://linkedin.com/company/sebrae-goias` |
+| facebook | `sebraego` | `https://facebook.com/sebraego` |
+| tiktok | `sebraego` | `https://tiktok.com/@sebraego` |
+| youtube | `UCxxxx...` | `https://youtube.com/@sebraego` |
+| threads | `sebraego` | `https://threads.net/@sebraego` |
+
+Para `posts.original_url` (URL do post específico), o admin cola a URL completa — sem normalização.
 
 ## 9. Telas
 
