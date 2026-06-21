@@ -35,6 +35,7 @@ export function EditPostForm({ post }: { post: Post }) {
   return (
     <form action={formAction} className="space-y-4" onSubmit={() => state?.ok && toast({ title: 'Publicação atualizada', variant: 'success' })}>
       <PostFormFields register={register} />
+      <input type="hidden" name="is_active" value="false" />
       <div className="flex items-center gap-2">
         <input id="is_active" type="checkbox" {...register('is_active')} defaultChecked={post.is_active} className="h-4 w-4" />
         <label htmlFor="is_active" className="text-body-sm text-text-primary">Publicação ativa</label>

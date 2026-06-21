@@ -22,6 +22,11 @@ export function PostForm() {
   return (
     <form action={action} className="space-y-4" onSubmit={() => state?.ok && toast({ title: 'Publicação criada', variant: 'success' })}>
       <PostFormFields register={register} />
+      <input type="hidden" name="is_active" value="false" />
+      <div className="flex items-center gap-2">
+        <input id="is_active" type="checkbox" {...register('is_active')} defaultChecked className="h-4 w-4" />
+        <label htmlFor="is_active" className="text-body-sm text-text-primary">Publicar imediatamente (ativa)</label>
+      </div>
       {state && !state.ok && (
         <p role="alert" className="text-body-sm text-state-error-strong bg-state-error/10 border border-state-error/30 rounded-md p-3">{state.error}</p>
       )}
