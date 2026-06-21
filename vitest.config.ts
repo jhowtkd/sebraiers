@@ -4,4 +4,5 @@ import path from 'node:path';
 export default defineConfig({
   test: { environment: 'happy-dom', setupFiles: ['./tests/setup.ts'], globals: true },
   resolve: { alias: { '@': path.resolve(__dirname, './') } },
+  esbuild: { jsx: 'automatic' },
 });
