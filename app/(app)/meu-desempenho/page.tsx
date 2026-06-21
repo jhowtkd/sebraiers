@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardBody } from '@/components/ui/card';
 import { CheckinHistoryList } from '@/components/posts/checkin-history-list';
 import type { CheckinAction, CheckinStatus, Network } from '@/lib/types';
+import { getCheckinEngagement, type CheckinEngagement } from '@/lib/queries/checkins';
 
 type CheckinWithPost = {
   id: string;
@@ -35,6 +36,17 @@ export default async function MyPerformancePage() {
     .order('declared_at', { ascending: false })
     .limit(50);
 
+  const itemList = (items ?? []) as unknown as CheckinWithPost[];
+  const engagementMap = new Map<string, CheckinEngagement>();
+  if (itemList.length > 0) {
+    await Promise.all(
+      itemList.map(async (it) => {
+        const eng = await getCheckinEngagement(it.id, user.id);
+        engagementMap.set(it.id, eng);
+      })
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -49,7 +61,11 @@ export default async function MyPerformancePage() {
       </div>
       <div>
         <h2 className="text-h3 text-text-primary mb-3">Histórico</h2>
-        <CheckinHistoryList items={((items ?? []) as unknown as CheckinWithPost[])} />
+        <CheckinHistoryList
+          items={itemList}
+          engagementMap={engagementMap}
+          currentUserId={user.id}
+        />
       </div>
     </div>
   );
