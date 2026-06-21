@@ -78,6 +78,26 @@ export const userToggleSchema = z.object({
   is_active: z.boolean(),
 });
 
+export const postReactionKindSchema = z.enum(['fire', 'muscle', 'clap', 'raised', 'laugh']);
+export const postReactionSetSchema = z.object({
+  post_id: z.string().uuid('Post inválido'),
+  reaction: postReactionKindSchema,
+});
+export const postCommentSchema = z.object({
+  post_id: z.string().uuid('Post inválido'),
+  body: z.string().min(1, 'Comentário vazio').max(500, 'Máximo de 500 caracteres').trim(),
+});
+
+export const checkinReactionKindSchema = z.enum(['clap']);
+export const checkinReactionSetSchema = z.object({
+  checkin_id: z.string().uuid('Check-in inválido'),
+  reaction: checkinReactionKindSchema,
+});
+export const checkinCommentSchema = z.object({
+  checkin_id: z.string().uuid('Check-in inválido'),
+  body: z.string().min(1, 'Comentário vazio').max(300, 'Máximo de 300 caracteres').trim(),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ProfileSocialsInput = z.infer<typeof profileSocialsSchema>;
@@ -85,3 +105,7 @@ export type PostInput = z.infer<typeof postSchema>;
 export type CheckinDeclareInput = z.infer<typeof checkinDeclareSchema>;
 export type CheckinDecideInput = z.infer<typeof checkinDecideSchema>;
 export type UserToggleInput = z.infer<typeof userToggleSchema>;
+export type PostReactionSetInput = z.infer<typeof postReactionSetSchema>;
+export type PostCommentInput = z.infer<typeof postCommentSchema>;
+export type CheckinReactionSetInput = z.infer<typeof checkinReactionSetSchema>;
+export type CheckinCommentInput = z.infer<typeof checkinCommentSchema>;

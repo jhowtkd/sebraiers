@@ -24,3 +24,33 @@ export async function getMyCheckinsWithPost(): Promise<CheckinWithPost[]> {
   if (error) throw error;
   return (data ?? []) as CheckinWithPost[];
 }
+
+export type CheckinEngagement = {
+  reactions: Record<string, number>;
+  myReactions: string[];
+  commentCount: number;
+  comments: { id: string; body: string; created_at: string; user: { full_name: string; username: string } }[];
+};
+
+export async function getCheckinEngagement(checkinId: string, userId: string | null): Promise<CheckinEngagement> {
+  const supabase = await createClient();
+  const [rxRes, myRxRes, commentsRes] = await Promise.all([
+    supabase.from('checkin_reactions').select('reaction').eq('checkin_id', checkinId),
+    userId
+      ? supabase.from('checkin_reactions').select('reaction').eq('checkin_id', checkinId).eq('user_id', userId)
+      : Promise.resolve({ data: [] as { reaction: string }[] | null }),
+    supabase.from('checkin_comments')
+      .select('id, body, created_at, user:profiles!checkin_comments_user_id_fkey(full_name, username)')
+      .eq('checkin_id', checkinId)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
+  const reactions: Record<string, number> = {};
+  (rxRes.data ?? []).forEach((r: { reaction: string }) => { reactions[r.reaction] = (reactions[r.reaction] ?? 0) + 1; });
+  return {
+    reactions,
+    myReactions: (myRxRes.data ?? []).map((r: { reaction: string }) => r.reaction),
+    commentCount: commentsRes.data?.length ?? 0,
+    comments: (commentsRes.data ?? []) as unknown as CheckinEngagement['comments'],
+  };
+}
