@@ -6,6 +6,8 @@ const getUserMock = vi.fn();
 const fromMock = vi.fn();
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => Promise.resolve({ auth: { getUser: getUserMock }, from: fromMock }),
+}));
+vi.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({ storage: { from: () => ({ upload: vi.fn().mockResolvedValue({ error: null }), getPublicUrl: () => ({ data: { publicUrl: 'https://x' } }) }) } }),
 }));
 

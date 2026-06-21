@@ -32,7 +32,9 @@ export async function createPostAction(_prev: ActionResult | null, formData: For
     original_url: formData.get('original_url'),
     published_at: formData.get('published_at'),
     cover_url: formData.get('cover_url') || null,
-    is_active: formData.get('is_active') === 'on' || formData.get('is_active') === 'true',
+    is_active: formData.has('is_active')
+      ? (formData.get('is_active') === 'on' || formData.get('is_active') === 'true')
+      : undefined,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' };
 
@@ -77,7 +79,9 @@ export async function updatePostAction(id: string, _prev: ActionResult | null, f
     original_url: formData.get('original_url'),
     published_at: formData.get('published_at'),
     cover_url: formData.get('cover_url') || null,
-    is_active: formData.get('is_active') === 'on' || formData.get('is_active') === 'true',
+    is_active: formData.has('is_active')
+      ? (formData.get('is_active') === 'on' || formData.get('is_active') === 'true')
+      : undefined,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' };
 
@@ -119,6 +123,7 @@ export async function togglePostActiveAction(id: string, isActive: boolean): Pro
   if (error) return { ok: false, error: 'Erro' };
   revalidatePath('/admin/posts');
   revalidatePath('/timeline');
+  revalidatePath(`/post/${id}`);
   return { ok: true };
 }
 

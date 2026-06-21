@@ -15,18 +15,13 @@ function SubmitBtn({ children }: { children: React.ReactNode }) {
 }
 
 export function PostForm() {
-  const { register, formState: { errors } } = useForm<PostInput>({ resolver: zodResolver(postSchema) });
+  const { register } = useForm<PostInput>({ resolver: zodResolver(postSchema) });
   const [state, action] = useFormState<ActionResult | null, FormData>(createPostAction, null);
   const { toast } = useToast();
 
   return (
     <form action={action} className="space-y-4" onSubmit={() => state?.ok && toast({ title: 'Publicação criada', variant: 'success' })}>
       <PostFormFields register={register} />
-      {Object.keys(errors).length > 0 && (
-        <p role="alert" className="text-body-sm text-state-error-strong bg-state-error/10 border border-state-error/30 rounded-md p-3">
-          Verifique os campos obrigatórios.
-        </p>
-      )}
       {state && !state.ok && (
         <p role="alert" className="text-body-sm text-state-error-strong bg-state-error/10 border border-state-error/30 rounded-md p-3">{state.error}</p>
       )}

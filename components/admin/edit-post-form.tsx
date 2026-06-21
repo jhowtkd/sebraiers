@@ -16,7 +16,7 @@ function SubmitBtn({ children }: { children: React.ReactNode }) {
 }
 
 export function EditPostForm({ post }: { post: Post }) {
-  const { register, formState: { errors } } = useForm<PostInput>({
+  const { register } = useForm<PostInput>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       title: post.title,
@@ -39,11 +39,6 @@ export function EditPostForm({ post }: { post: Post }) {
         <input id="is_active" type="checkbox" {...register('is_active')} defaultChecked={post.is_active} className="h-4 w-4" />
         <label htmlFor="is_active" className="text-body-sm text-text-primary">Publicação ativa</label>
       </div>
-      {Object.keys(errors).length > 0 && (
-        <p role="alert" className="text-body-sm text-state-error-strong bg-state-error/10 border border-state-error/30 rounded-md p-3">
-          Verifique os campos obrigatórios.
-        </p>
-      )}
       {state && !state.ok && (
         <p role="alert" className="text-body-sm text-state-error-strong bg-state-error/10 border border-state-error/30 rounded-md p-3">{state.error}</p>
       )}
