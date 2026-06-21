@@ -55,3 +55,42 @@ export async function getCheckinEngagement(checkinId: string, userId: string | n
     comments: (commentsRes.data ?? []) as unknown as CheckinEngagement['comments'],
   };
 }
+
+export async function getCheckinsEngagementBatch(
+  checkinIds: string[],
+  userId: string | null
+): Promise<Map<string, Omit<CheckinEngagement, 'comments'>>> {
+  const result = new Map<string, Omit<CheckinEngagement, 'comments'>>();
+  if (checkinIds.length === 0) return result;
+  const supabase = await createClient();
+  const [rxRes, myRxRes, commentsRes] = await Promise.all([
+    supabase.from('checkin_reactions').select('checkin_id, reaction').in('checkin_id', checkinIds),
+    userId
+      ? supabase.from('checkin_reactions').select('checkin_id, reaction').in('checkin_id', checkinIds).eq('user_id', userId)
+      : Promise.resolve({ data: [] as { checkin_id: string; reaction: string }[] | null }),
+    supabase.from('checkin_comments').select('checkin_id').in('checkin_id', checkinIds),
+  ]);
+  const rxByCheckin = new Map<string, Record<string, number>>();
+  (rxRes.data ?? []).forEach((r: { checkin_id: string; reaction: string }) => {
+    if (!rxByCheckin.has(r.checkin_id)) rxByCheckin.set(r.checkin_id, {});
+    const m = rxByCheckin.get(r.checkin_id)!;
+    m[r.reaction] = (m[r.reaction] ?? 0) + 1;
+  });
+  const myRxByCheckin = new Map<string, string[]>();
+  (myRxRes.data ?? []).forEach((r: { checkin_id: string; reaction: string }) => {
+    if (!myRxByCheckin.has(r.checkin_id)) myRxByCheckin.set(r.checkin_id, []);
+    myRxByCheckin.get(r.checkin_id)!.push(r.reaction);
+  });
+  const commentCountByCheckin = new Map<string, number>();
+  (commentsRes.data ?? []).forEach((c: { checkin_id: string }) => {
+    commentCountByCheckin.set(c.checkin_id, (commentCountByCheckin.get(c.checkin_id) ?? 0) + 1);
+  });
+  for (const id of checkinIds) {
+    result.set(id, {
+      reactions: rxByCheckin.get(id) ?? {},
+      myReactions: myRxByCheckin.get(id) ?? [],
+      commentCount: commentCountByCheckin.get(id) ?? 0,
+    });
+  }
+  return result;
+}

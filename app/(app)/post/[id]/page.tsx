@@ -2,14 +2,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
-import { getPostById, getPostEngagement } from '@/lib/queries/posts';
+import { getPostById, getPostEngagementWithComments } from '@/lib/queries/posts';
 import { getMyCheckinsForPost } from '@/lib/queries/checkins';
 import { Card, CardBody } from '@/components/ui/card';
 import { CheckinButtons } from '@/components/posts/checkin-buttons';
 import { NetworkIcon } from '@/components/ui/network-icon';
 import { ReactionBar } from '@/components/social/reaction-bar';
-import { Comments, type Comment } from '@/components/social/comments';
+import { Comments } from '@/components/social/comments';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 
@@ -18,19 +17,11 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const post = await getPostById(id);
   if (!post) notFound();
-  const [mine, engagement, supabase] = await Promise.all([
+  const [mine, engagement] = await Promise.all([
     getMyCheckinsForPost(id),
-    getPostEngagement(id, user.id),
-    createClient(),
+    getPostEngagementWithComments(id, user.id),
   ]);
   const existing = mine.map((c) => ({ action: c.action, status: c.status }));
-
-  const { data: postComments } = await supabase
-    .from('post_comments')
-    .select('id, body, created_at, user:profiles!post_comments_user_id_fkey(full_name, username, avatar_url)')
-    .eq('post_id', id)
-    .order('created_at', { ascending: false })
-    .limit(50);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -73,7 +64,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           <Comments
             target="post"
             postId={post.id}
-            comments={(postComments ?? []) as unknown as Comment[]}
+            comments={engagement.comments}
           />
         </CardBody>
       </Card>

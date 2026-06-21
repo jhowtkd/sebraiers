@@ -82,3 +82,37 @@ export async function getPostsEngagementBatch(
   }
   return result;
 }
+
+export type CommentWithUser = {
+  id: string;
+  body: string;
+  created_at: string;
+  user: { full_name: string; username: string; avatar_url: string | null };
+};
+
+export async function getPostEngagementWithComments(
+  postId: string,
+  userId: string | null
+): Promise<PostEngagement & { comments: CommentWithUser[] }> {
+  const supabase = await createClient();
+  const [rxRes, myRxRes, countRes, commentsRes] = await Promise.all([
+    supabase.from('post_reactions').select('reaction').eq('post_id', postId),
+    userId
+      ? supabase.from('post_reactions').select('reaction').eq('post_id', postId).eq('user_id', userId)
+      : Promise.resolve({ data: [] as { reaction: string }[] | null }),
+    supabase.from('post_comments').select('id', { count: 'exact', head: true }).eq('post_id', postId),
+    supabase.from('post_comments')
+      .select('id, body, created_at, user:profiles!post_comments_user_id_fkey(full_name, username, avatar_url)')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
+  const reactions: Record<string, number> = {};
+  (rxRes.data ?? []).forEach((r: { reaction: string }) => { reactions[r.reaction] = (reactions[r.reaction] ?? 0) + 1; });
+  return {
+    reactions,
+    myReactions: (myRxRes.data ?? []).map((r: { reaction: string }) => r.reaction),
+    commentCount: countRes.count ?? 0,
+    comments: (commentsRes.data ?? []) as unknown as CommentWithUser[],
+  };
+}

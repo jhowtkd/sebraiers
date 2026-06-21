@@ -7,10 +7,11 @@ import { Card, CardBody } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { NetworkIcon } from '@/components/ui/network-icon';
 import { ReactionBar } from '@/components/social/reaction-bar';
-import { Comments } from '@/components/social/comments';
+import { Comments, type Comment } from '@/components/social/comments';
 import { formatRelative } from '@/lib/utils';
 import { ACTION_LABELS, type CheckinAction, type CheckinStatus, type Network } from '@/lib/types';
 import type { CheckinEngagement } from '@/lib/queries/checkins';
+import { getCheckinCommentsAction } from '@/app/actions/social';
 
 type Item = {
   id: string;
@@ -29,6 +30,24 @@ export function CheckinHistoryList({
   engagementMap: Map<string, CheckinEngagement>;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [commentsByCheckin, setCommentsByCheckin] = useState<Record<string, Comment[]>>({});
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  async function toggleOpen(id: string) {
+    if (openId === id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(id);
+    if (!commentsByCheckin[id]) {
+      setLoadingId(id);
+      const res = await getCheckinCommentsAction(id);
+      if (res.ok && res.comments) {
+        setCommentsByCheckin((prev) => ({ ...prev, [id]: res.comments as Comment[] }));
+      }
+      setLoadingId(null);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -42,6 +61,7 @@ export function CheckinHistoryList({
       {items.map((it) => {
         const engagement = engagementMap.get(it.id);
         const isOpen = openId === it.id;
+        const isLoading = loadingId === it.id;
         return (
           <Card key={it.id}>
             <CardBody>
@@ -79,7 +99,7 @@ export function CheckinHistoryList({
                   <ReactionBar target="checkin" targetId={it.id} engagement={engagement} />
                   <button
                     type="button"
-                    onClick={() => setOpenId(isOpen ? null : it.id)}
+                    onClick={() => toggleOpen(it.id)}
                     aria-expanded={isOpen}
                     className="inline-flex items-center gap-1.5 text-caption text-text-muted hover:text-brand-azul"
                   >
@@ -90,11 +110,15 @@ export function CheckinHistoryList({
                   </button>
                   {isOpen && (
                     <div className="pt-2">
-                      <Comments
-                        target="checkin"
-                        checkinId={it.id}
-                        comments={engagement.comments}
-                      />
+                      {isLoading ? (
+                        <p className="text-caption text-text-muted py-2">Carregando…</p>
+                      ) : (
+                        <Comments
+                          target="checkin"
+                          checkinId={it.id}
+                          comments={commentsByCheckin[it.id] ?? engagement.comments}
+                        />
+                      )}
                     </div>
                   )}
                 </div>

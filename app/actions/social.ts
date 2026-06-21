@@ -139,3 +139,15 @@ export async function addCheckinCommentAction(input: { checkin_id: string; body:
   revalidatePath('/meu-desempenho');
   return { ok: true };
 }
+
+export async function getCheckinCommentsAction(checkin_id: string): Promise<{ ok: boolean; comments?: { id: string; body: string; created_at: string; user: { full_name: string; username: string; avatar_url: string | null } }[]; error?: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('checkin_comments')
+    .select('id, body, created_at, user:profiles!checkin_comments_user_id_fkey(full_name, username, avatar_url)')
+    .eq('checkin_id', checkin_id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) return { ok: false, error: 'Erro ao carregar comentários' };
+  return { ok: true, comments: (data ?? []) as unknown as { id: string; body: string; created_at: string; user: { full_name: string; username: string; avatar_url: string | null } }[] };
+}

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardBody } from '@/components/ui/card';
 import { CheckinHistoryList } from '@/components/posts/checkin-history-list';
 import type { CheckinAction, CheckinStatus, Network } from '@/lib/types';
-import { getCheckinEngagement, type CheckinEngagement } from '@/lib/queries/checkins';
+import { getCheckinsEngagementBatch, type CheckinEngagement } from '@/lib/queries/checkins';
 
 type CheckinWithPost = {
   id: string;
@@ -37,14 +37,16 @@ export default async function MyPerformancePage() {
     .limit(50);
 
   const itemList = (items ?? []) as unknown as CheckinWithPost[];
+  const batched = await getCheckinsEngagementBatch(itemList.map((it) => it.id), user.id);
   const engagementMap = new Map<string, CheckinEngagement>();
-  if (itemList.length > 0) {
-    await Promise.all(
-      itemList.map(async (it) => {
-        const eng = await getCheckinEngagement(it.id, user.id);
-        engagementMap.set(it.id, eng);
-      })
-    );
+  for (const it of itemList) {
+    const b = batched.get(it.id);
+    engagementMap.set(it.id, {
+      reactions: b?.reactions ?? {},
+      myReactions: b?.myReactions ?? [],
+      commentCount: b?.commentCount ?? 0,
+      comments: [],
+    });
   }
 
   return (
