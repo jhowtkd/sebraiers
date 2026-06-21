@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatRelative, initials } from '@/lib/utils';
 import { CommentForm } from './comment-form';
 import { MessageCircle } from 'lucide-react';
@@ -35,6 +35,7 @@ export function Comments({
           {comments.map((c) => (
             <li key={c.id} className="flex items-start gap-3">
               <Avatar className="h-8 w-8 flex-shrink-0">
+                {c.user.avatar_url && <AvatarImage src={c.user.avatar_url} alt={c.user.full_name} />}
                 <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">
                   {initials(c.user.full_name)}
                 </AvatarFallback>
