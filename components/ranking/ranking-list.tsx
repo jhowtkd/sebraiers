@@ -16,7 +16,7 @@ export function RankingList({
   return (
     <ol className="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-elevated overflow-hidden">
       {rows.map((r, i) => {
-        const pos = myPosition && r.user_id === highlightUserId ? myPosition : i + 1;
+        const pos = myPosition && r.user_id === highlightUserId ? myPosition : i + 4;
         const isMe = r.user_id === highlightUserId;
         return (
           <li key={r.user_id} className={cn('flex items-center gap-3 sm:gap-4 p-3 sm:p-4', isMe && 'bg-state-info/5')}>
