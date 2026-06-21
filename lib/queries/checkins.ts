@@ -29,18 +29,19 @@ export type CheckinEngagement = {
   reactions: Record<string, number>;
   myReactions: string[];
   commentCount: number;
-  comments: { id: string; body: string; created_at: string; user: { full_name: string; username: string } }[];
+  comments: { id: string; body: string; created_at: string; user: { full_name: string; username: string; avatar_url: string | null } }[];
 };
 
 export async function getCheckinEngagement(checkinId: string, userId: string | null): Promise<CheckinEngagement> {
   const supabase = await createClient();
-  const [rxRes, myRxRes, commentsRes] = await Promise.all([
+  const [rxRes, myRxRes, countRes, commentsRes] = await Promise.all([
     supabase.from('checkin_reactions').select('reaction').eq('checkin_id', checkinId),
     userId
       ? supabase.from('checkin_reactions').select('reaction').eq('checkin_id', checkinId).eq('user_id', userId)
       : Promise.resolve({ data: [] as { reaction: string }[] | null }),
+    supabase.from('checkin_comments').select('id', { count: 'exact', head: true }).eq('checkin_id', checkinId),
     supabase.from('checkin_comments')
-      .select('id, body, created_at, user:profiles!checkin_comments_user_id_fkey(full_name, username)')
+      .select('id, body, created_at, user:profiles!checkin_comments_user_id_fkey(full_name, username, avatar_url)')
       .eq('checkin_id', checkinId)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -50,7 +51,7 @@ export async function getCheckinEngagement(checkinId: string, userId: string | n
   return {
     reactions,
     myReactions: (myRxRes.data ?? []).map((r: { reaction: string }) => r.reaction),
-    commentCount: commentsRes.data?.length ?? 0,
+    commentCount: countRes.count ?? 0,
     comments: (commentsRes.data ?? []) as unknown as CheckinEngagement['comments'],
   };
 }

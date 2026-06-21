@@ -32,7 +32,7 @@ Adiciona interações sociais leves ao SEBRAEIERS: reações emoji em posts e ch
 ## 3. Mudanças vs spec v1 (sem impacto no que já existe)
 
 - **Tabelas novas:** 4 (`post_reactions`, `post_comments`, `checkin_reactions`, `checkin_comments`).
-- **Migration nova:** `supabase/migrations/0004_engagement.sql`.
+- **Migration nova:** `supabase/migrations/0005_engagement.sql`.
 - **Server actions novas:** 4 (`setPostReactionAction`, `addPostCommentAction`, `setCheckinReactionAction`, `addCheckinCommentAction`).
 - **Queries novas:** `getPostEngagement(postId)`, `getCheckinEngagement(checkinId)`, `getPostsEngagementBatch(postIds[])` — evita N+1 na timeline.
 - **Componentes novos:** `components/social/{reaction-bar,reaction-button,comments,comment-form}.tsx` + `lib/social/emojis.ts`.
@@ -271,7 +271,7 @@ supabase/
     0001_init.sql (existente)
     0002_security_hardening.sql (existente)
     0003_decide_checkin_rpc.sql (existente)
-    0004_engagement.sql                          # NOVO
+    0005_engagement.sql                          # NOVO
 lib/
   social/
     emojis.ts                                   # NOVO
