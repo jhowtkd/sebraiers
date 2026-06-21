@@ -40,21 +40,16 @@ export async function decideCheckinAction(input: { checkin_id: string; decision:
   const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
   if (!profile?.is_admin) return { ok: false, error: 'Sem permissão' };
 
-  const { data: updated, error: updErr } = await supabase.from('checkins').update({
-    status: parsed.data.decision,
-    decided_at: new Date().toISOString(),
-    decided_by: user.id,
-    admin_note: parsed.data.note ?? null,
-  }).eq('id', parsed.data.checkin_id).select('user_id').maybeSingle();
-  if (updErr || !updated) return { ok: false, error: 'Erro ao atualizar' };
-
-  const { error: logErr } = await supabase.from('checkin_approvals').insert({
-    checkin_id: parsed.data.checkin_id,
-    admin_id: user.id,
-    decision: parsed.data.decision,
-    note: parsed.data.note ?? null,
+  const { error: rpcErr } = await supabase.rpc('decide_checkin', {
+    p_checkin_id: parsed.data.checkin_id,
+    p_decision: parsed.data.decision,
+    p_admin_id: user.id,
+    p_note: parsed.data.note ?? null,
   });
-  if (logErr) return { ok: false, error: 'Erro ao registrar log' };
+  if (rpcErr) {
+    if (rpcErr.code === 'P0002') return { ok: false, error: 'Este check-in já foi decidido.' };
+    return { ok: false, error: 'Erro ao processar decisão.' };
+  }
 
   revalidatePath('/admin/checkins');
   revalidatePath('/admin');
