@@ -4,7 +4,7 @@ import type { Post, Network } from '@/lib/types';
 
 export async function getTimeline(opts: { network?: Network | 'all'; search?: string } = {}): Promise<Post[]> {
   const supabase = await createClient();
-  let q = supabase.from('posts').select('*').eq('is_active', true)
+  let q = supabase.from('posts').select('*, author:profiles!posts_created_by_fkey(full_name, username, avatar_url)').eq('is_active', true)
     .order('published_at', { ascending: false }).limit(100);
   if (opts.network && opts.network !== 'all') q = q.eq('network', opts.network);
   if (opts.search) q = q.ilike('title', `%${opts.search}%`);

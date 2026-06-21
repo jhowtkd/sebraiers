@@ -37,6 +37,11 @@ export interface Post {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  author?: {
+    full_name: string;
+    username: string;
+    avatar_url: string | null;
+  } | null;
 }
 
 export interface Checkin {
