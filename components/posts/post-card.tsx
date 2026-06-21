@@ -1,56 +1,115 @@
 import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
-import { Card, CardBody } from '@/components/ui/card';
-import { NetworkIcon } from '@/components/ui/network-icon';
+import { MessageCircle, ExternalLink } from 'lucide-react';
 import { ReactionBar } from '@/components/social/reaction-bar';
-import { formatRelative } from '@/lib/utils';
-import type { Post } from '@/lib/types';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { NETWORK_LABELS, type Post } from '@/lib/types';
 import type { PostEngagement } from '@/lib/queries/posts';
+import { initials, formatRelative } from '@/lib/utils';
 
-export function PostCard({ post, engagement }: { post: Post; engagement?: PostEngagement }) {
+type Props = {
+  post: Post;
+  engagement?: PostEngagement;
+};
+
+export function PostCard({ post, engagement }: Props) {
+  const author = post.author ?? null;
+  const authorName = author?.full_name ?? 'Anônimo';
+  const authorUsername = author?.username ?? 'anônimo';
+  const networkLabel = NETWORK_LABELS[post.network];
+  const time = formatRelative(post.published_at);
+
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      {post.cover_url && (
-        <Link href={`/post/${post.id}`} aria-label={`Ver detalhe de ${post.title}`}>
-          <div className="aspect-video w-full bg-surface-sunken overflow-hidden">
-            <img src={post.cover_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-          </div>
-        </Link>
-      )}
-      <CardBody>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-2 py-0.5 text-caption text-text-secondary">
-            <NetworkIcon network={post.network} /> {post.network}
-          </span>
-          <span className="text-caption text-text-muted">{formatRelative(post.published_at)}</span>
+    <article className="bg-surface-elevated rounded-xl border border-border-subtle overflow-hidden">
+      {/* header */}
+      <header className="flex items-center gap-3 p-3">
+        <Avatar className="h-8 w-8 flex-shrink-0">
+          {author?.avatar_url && (
+            <AvatarImage src={author.avatar_url} alt={authorName} />
+          )}
+          <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">
+            {initials(authorName)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="text-body-sm font-semibold text-text-primary truncate">
+            {authorName}
+          </p>
+          <p className="text-caption text-text-muted truncate">
+            @{authorUsername} · via {networkLabel}
+          </p>
         </div>
-        <Link href={`/post/${post.id}`} className="block">
-          <h3 className="text-h4 text-text-primary line-clamp-2 hover:text-brand-azul">{post.title}</h3>
-        </Link>
-        {post.description && <p className="mt-2 text-body-sm text-text-secondary line-clamp-3">{post.description}</p>}
-        {engagement && (
-          <div className="mt-3 space-y-2">
-            <ReactionBar
-              target="post"
-              targetId={post.id}
-              engagement={engagement}
-              compact
+        <time dateTime={post.published_at} className="text-caption text-text-muted flex-shrink-0">
+          {time}
+        </time>
+      </header>
+
+      {/* cover (clickable to detail) */}
+      <Link href={`/post/${post.id}`} aria-label={`Ver detalhe de ${post.title}`}>
+        <figure className="aspect-square w-full bg-surface-sunken overflow-hidden">
+          {post.cover_url ? (
+            <img
+              src={post.cover_url}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
             />
-            <Link
-              href={`/post/${post.id}#conversa`}
-              className="inline-flex items-center gap-1.5 text-caption text-text-muted hover:text-brand-azul"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="tabular-nums">{engagement.commentCount}</span>
-              <span>{engagement.commentCount === 1 ? 'comentário' : 'comentários'}</span>
-            </Link>
-          </div>
+          ) : null}
+        </figure>
+      </Link>
+
+      {/* action bar */}
+      {engagement && (
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-border-subtle">
+          <ReactionBar
+            target="post"
+            targetId={post.id}
+            engagement={engagement}
+            compact
+          />
+          <Link
+            href={`/post/${post.id}#conversa`}
+            className="ml-auto inline-flex items-center gap-1 text-caption text-text-muted hover:text-brand-azul"
+            aria-label={`Ver ${engagement.commentCount} comentários`}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="tabular-nums">{engagement.commentCount}</span>
+          </Link>
+        </div>
+      )}
+
+      {/* caption */}
+      <div className="px-3 py-3 space-y-1">
+        <p className="text-body-sm text-text-primary">
+          <span className="font-semibold">{authorUsername}</span>{' '}
+          {post.title}
+        </p>
+        {post.description && (
+          <p className="text-body-sm text-text-secondary line-clamp-3">
+            {post.description}
+          </p>
         )}
-        <a href={post.original_url} target="_blank" rel="noopener noreferrer"
-          className="mt-3 inline-block text-body-sm text-brand-azul font-medium hover:underline">
-          Abrir publicação original →
+        {engagement && engagement.commentCount > 0 && (
+          <Link
+            href={`/post/${post.id}#conversa`}
+            className="block text-caption text-text-muted hover:text-brand-azul"
+          >
+            Ver todos os {engagement.commentCount} comentários
+          </Link>
+        )}
+      </div>
+
+      {/* footer */}
+      <footer className="px-3 pb-3 flex items-center justify-between text-caption text-text-muted">
+        <time dateTime={post.published_at}>{time}</time>
+        <a
+          href={post.original_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 hover:text-brand-azul"
+        >
+          via {networkLabel} <ExternalLink className="h-3 w-3" />
         </a>
-      </CardBody>
-    </Card>
+      </footer>
+    </article>
   );
 }
