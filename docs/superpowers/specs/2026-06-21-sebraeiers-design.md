@@ -2,9 +2,9 @@
 
 **Data:** 2026-06-21
 **Versão:** 1.0
-**Status:** Aguardando aprovação do usuário
+**Status:** Em implementação
 
----
+> **Brandbook:** todos os tokens visuais, paleta, tipografia, componentes, tom de voz e regras de acessibilidade estão definidos em [`../../brand/`](../../brand/) (Brandbook SEBRAEIERS v1.0). Este spec é o **design funcional** (stack, modelo de dados, fluxos) — o brandbook é a fonte da verdade visual.
 
 ## 1. Resumo
 
@@ -84,6 +84,7 @@ full_name       text NOT NULL CHECK (length(full_name) BETWEEN 2 AND 120)
 username        text NOT NULL UNIQUE CHECK (username ~ '^[a-z0-9_.]{3,30}$')
 is_admin        boolean NOT NULL DEFAULT false
 is_active       boolean NOT NULL DEFAULT true
+avatar_url      text
 created_at      timestamptz NOT NULL DEFAULT now()
 ```
 
@@ -142,7 +143,7 @@ note            text
 created_at      timestamptz NOT NULL DEFAULT now()
 ```
 
-### 5.6 View materializada: `user_points`
+### 5.6 View `user_points` (comum, não materializada)
 ```sql
 SELECT
   c.user_id,
@@ -153,7 +154,7 @@ FROM checkins c
 WHERE c.status = 'approved'
 GROUP BY c.user_id
 ```
-Refreshed após cada aprovação/rejeição via trigger.
+View comum (recalculada a cada query). Para volume baixo de checkins, isso é suficiente. Se virar gargalo, migrar para materializada com `REFRESH MATERIALIZED VIEW CONCURRENTLY` em trigger.
 
 ### 5.7 RLS — resumo das políticas
 
@@ -161,11 +162,20 @@ Refreshed após cada aprovação/rejeição via trigger.
 |---|---|---|---|---|
 | profiles | qualquer logado | próprio user | próprio user (sem `is_admin`/`is_active`) | — |
 | user_socials | próprio + admin | próprio | próprio | — |
-| posts | qualquer logado | admin | admin | admin |
+| posts | qualquer logado (ativo) / admin (tudo) | admin | admin | admin |
 | checkins | próprio + admin | próprio (status='pending') | admin (status) | — |
 | checkin_approvals | admin | admin | — | — |
 
-`is_admin` vem de claim no JWT via `auth.jwt() ->> 'is_admin'`. Atualizado por hook `on auth.users update` ou trigger após signup comparando email com `ADMIN_EMAILS` (que é resolvido no server-side do Next, não no banco).
+**Proteção de colunas `is_admin` / `is_active` em `profiles`:**
+- A policy `profiles_update_self` precisa ter `with check` que rejeite tentativas de alterar essas colunas. A forma idiomática no Postgres é uma `BEFORE UPDATE` trigger que valida `OLD.is_admin = NEW.is_admin` e `OLD.is_active = NEW.is_active` para usuários não-admin, ou comparar `auth.jwt() ->> 'is_admin'`. **Gap a corrigir na migration v2**: adicionar trigger `protect_admin_fields` ou usar `with check` que exige `(SELECT is_admin FROM profiles WHERE id = auth.uid()) = is_admin`.
+
+**Mecanismo de `is_admin` (provisão):**
+- No signup, o **servidor Next** (server action) valida se o email está em `ADMIN_EMAILS` (env var CSV) **antes** de chamar `supabase.auth.signUp()`. Se sim, passa `options.data.admin_email_hint = email` no payload (o cliente não pode forjar isso se a chamada for server-side).
+- No banco, o trigger `handle_new_user` lê `raw_user_meta_data->>'admin_email_hint'` e, se bater com `new.email`, marca `is_admin=true`. **Belt-and-suspenders**: também existe tabela `admin_whitelist` (editável via SQL) como fallback.
+- Claims do JWT (`auth.jwt() ->> 'is_admin'`) são lidos pelas RLS policies e mantidos em sincronia via trigger em `UPDATE profiles` (a definir na migration v2).
+
+**Gap funcional — trava de "último admin":**
+- Spec §6.6 exige "não rebaixar o último admin". Não há trigger/função que enforce isso. **A resolver no plano**: criar trigger `prevent_last_admin_demote` que faz `RAISE EXCEPTION` se a operação resultaria em zero admins ativos.
 
 ## 6. Fluxos principais
 
@@ -259,7 +269,7 @@ Toda tela trata: **loading** (skeleton), **vazio** (empty state com CTA), **erro
   - Surface: `#F5F7FA` / dark `#0E1320`
 - **Tipografia:** Inter (sans-serif moderna), tabular nums pra pontos.
 - **Componentes:** cards com sombra suave, bordas arredondadas (`rounded-2xl`), ícones de redes (lucide), badges de status (cores semânticas).
-- **Gamificação discreta:** pódio (🥇🥈🥉) no top 3, barra de progresso pro próximo nível (50/100/250/500/1000 pontos = Bronze/Prata/Ouro/Platina/Diamante), confetti ao subir de nível (futuro).
+- **Gamificação discreta:** pódio (🥇🥈🥉) no top 3, pontos exibidos em destaque com tabular nums. Sistema de níveis/tiers (Bronze/Prata/Ouro/Platina/Diamante) está fora do escopo v1 — apenas pontuação numérica.
 - **Responsivo:** mobile-first, layout em coluna no celular, grid 2-3 colunas no desktop.
 
 ## 12. Variáveis de ambiente
