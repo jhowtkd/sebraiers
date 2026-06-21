@@ -23,18 +23,24 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
         <h1 className="text-h1 text-text-primary">Timeline</h1>
         <p className="text-body text-text-secondary mt-1">Publicações do SEBRAE Goiás pra engajar.</p>
       </div>
-      <PostFilters />
-      {posts.length === 0 ? (
-        <EmptyState
-          icon={<Inbox className="h-10 w-10" />}
-          title="Nenhuma publicação por aqui ainda"
-          description="Quando o time de comunicação postar nas redes oficiais, vai aparecer aqui pra você conferir e engajar."
-        />
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {posts.map((p) => <PostCard key={p.id} post={p} engagement={engagementMap.get(p.id)} />)}
-        </div>
-      )}
+      <div className="mx-auto max-w-[600px] px-4 sm:px-0 space-y-4">
+        <PostFilters />
+        {posts.length === 0 ? (
+          <EmptyState
+            icon={<Inbox className="h-10 w-10" />}
+            title="Nenhuma publicação por aqui ainda"
+            description="Quando o time de comunicação postar nas redes oficiais, vai aparecer aqui pra você conferir e engajar."
+          />
+        ) : (
+          <ul className="space-y-6">
+            {posts.map((p) => (
+              <li key={p.id}>
+                <PostCard post={p} engagement={engagementMap.get(p.id)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
