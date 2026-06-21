@@ -1,0 +1,41 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock('next/navigation', () => ({ redirect: vi.fn((u: string) => { throw new Error('NEXT_REDIRECT:' + u); }), revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+
+const getUserMock = vi.fn();
+const fromMock = vi.fn();
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: () => Promise.resolve({ auth: { getUser: getUserMock }, from: fromMock }),
+  getAdminClient: () => ({ storage: { from: () => ({ upload: vi.fn().mockResolvedValue({ error: null }), getPublicUrl: () => ({ data: { publicUrl: 'https://x' } }) }) } }),
+}));
+
+import { createPostAction } from '@/app/actions/posts';
+
+describe('createPostAction', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('rejects non-admin', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    fromMock.mockImplementation(() => ({ select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: false }, error: null }) }) }) }));
+    const fd = new FormData();
+    fd.set('title', 'ok'); fd.set('network', 'instagram'); fd.set('original_url', 'https://x'); fd.set('published_at', '2026-06-21T00:00');
+    const res = await createPostAction(null, fd);
+    expect(res.ok).toBe(false);
+  });
+
+  it('creates post as admin', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    let profileCall = 0, insertCall = 0;
+    fromMock.mockImplementation(() => ({
+      select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }),
+      insert: () => { insertCall++; return Promise.resolve({ error: null }); },
+    }));
+    const fd = new FormData();
+    fd.set('title', 'Teste de post');
+    fd.set('network', 'instagram');
+    fd.set('original_url', 'https://instagram.com/p/x');
+    fd.set('published_at', '2026-06-21T00:00');
+    await expect(createPostAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/admin/posts');
+    expect(insertCall).toBeGreaterThan(0);
+  });
+});
