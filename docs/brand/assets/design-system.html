@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEBRAEIERS — Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Cores — identidade */
+      --brand-azul: #2A4FDA;
+      --brand-azul-100: #E0E7FB;
+      --brand-atlantico: #0B2574;
+      --brand-ceu: #65B7FB;
+      --brand-ceu-100: #DCEFFD;
+      --brand-offwhite: #EFF3EE;
+      --brand-preto: #000000;
+
+      /* Tiers */
+      --tier-bronze: #F39D72;
+      --tier-prata: #E0565D;
+      --tier-ouro: #FBEC76;
+      --tier-platina: #FF80C8;
+      --tier-diamante: #BE64E3;
+
+      /* Paleta diversa */
+      --gam-begonia: #FF80C8;
+      --gam-manaca: #BE64E3;
+      --gam-jacaranda: #8F85F4;
+      --gam-tie: #E0565D;
+      --gam-acelola: #F39D72;
+      --gam-ipe: #F2AFAB;
+      --gam-canario: #FBEC76;
+      --gam-umbu: #E7F79E;
+      --gam-pera: #CADF61;
+      --gam-menta: #9FF0BD;
+      --gam-taiti: #90D275;
+      --gam-guaco: #61B466;
+
+      /* Semântica */
+      --state-success: #61B466;
+      --state-success-strong: #0F8A3F;
+      --state-error: #E0565D;
+      --state-error-strong: #A6202C;
+      --state-warning: #FBEC76;
+      --state-info: #65B7FB;
+      --state-neutral: #7A8499;
+
+      /* Superfícies */
+      --surface-canvas: #EFF3EE;
+      --surface-elevated: #FFFFFF;
+      --surface-sunken: #E0E5DD;
+
+      /* Texto */
+      --text-primary: #0B2574;
+      --text-secondary: #475569;
+      --text-muted: #7A8499;
+      --text-on-primary: #FFFFFF;
+      --text-on-accent: #0B2574;
+
+      /* Border */
+      --border-subtle: #D8DDD6;
+      --border-strong: #0B2574;
+      --border-focus: #2A4FDA;
+
+      /* Gradientes */
+      --gradient-azul-taiti: linear-gradient(45deg, #2A4FDA 0%, #90D275 100%);
+      --gradient-ceu-begonia: linear-gradient(45deg, #65B7FB 0%, #FF80C8 100%);
+      --gradient-canario-umbu: linear-gradient(45deg, #FBEC76 0%, #E7F79E 100%);
+      --gradient-atlantico-ceu: linear-gradient(45deg, #0B2574 0%, #65B7FB 100%);
+      --gradient-acelola-tie: linear-gradient(45deg, #F39D72 0%, #E0565D 100%);
+
+      /* Tipografia */
+      --font-family: 'Figtree', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* Espaçamento */
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+      --space-12: 48px; --space-16: 64px;
+
+      /* Raios */
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --radius-xl: 24px; --radius-2xl: 32px; --radius-full: 9999px;
+
+      /* Sombras */
+      --shadow-sm: 0 1px 3px 0 rgba(11, 37, 116, 0.08), 0 1px 2px 0 rgba(11, 37, 116, 0.04);
+      --shadow-md: 0 4px 12px -2px rgba(11, 37, 116, 0.10), 0 2px 4px -2px rgba(11, 37, 116, 0.06);
+      --shadow-lg: 0 12px 24px -4px rgba(11, 37, 116, 0.12), 0 4px 8px -2px rgba(11, 37, 116, 0.08);
+      --shadow-focus: 0 0 0 3px rgba(42, 79, 218, 0.32);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--surface-canvas);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+
+    /* Header */
+    .page-header {
+      background: var(--gradient-azul-taiti);
+      padding: var(--space-16) var(--space-6);
+      color: white;
+    }
+    .page-header .container { padding-top: 0; padding-bottom: 0; }
+    .page-header h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.17;
+      margin-bottom: var(--space-3);
+    }
+    .page-header p {
+      font-size: 17px;
+      opacity: 0.95;
+      max-width: 720px;
+    }
+    .badge-section {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-4);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: var(--space-16);
+    }
+    .section-header {
+      margin-bottom: var(--space-8);
+      padding-bottom: var(--space-4);
+      border-bottom: 2px solid var(--brand-azul);
+    }
+    .section-header .overline {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brand-azul);
+      margin-bottom: var(--space-1);
+    }
+    .section-header h2 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.22;
+      color: var(--text-primary);
+    }
+    .section-header p {
+      font-size: 17px;
+      color: var(--text-secondary);
+      margin-top: var(--space-3);
+      max-width: 720px;
+    }
+
+    /* Logo showcase */
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-6);
+    }
+    .logo-card {
+      background: var(--surface-elevated);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10) var(--space-6);
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .logo-card.dark {
+      background: var(--brand-atlantico);
+      color: white;
+    }
+    .logo-card .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-4);
+    }
+    .logo-card.dark .label { color: rgba(255,255,255,0.7); }
+    .logo-card svg { max-width: 100%; height: auto; margin: 0 auto; display: block; }
+    .logo-icon-large {
+      width: 144px;
+      height: 144px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    /* Color swatches */
+    .color-section { margin-bottom: var(--space-10); }
+    .color-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-4);
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--space-3);
+    }
+    .color-swatch {
+      background: var(--surface-elevated);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .color-swatch:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .color-swatch .swatch {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .color-swatch .swatch .hex {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      backdrop-filter: blur(8px);
+    }
+    .color-swatch .info {
+      padding: var(--space-3) var(--space-4);
+    }
+    .color-swatch .info .name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .color-swatch .info .token {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .gradient-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--space-4);
+    }
+    .gradient-card {
+      height: 120px;
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: flex-end;
+      padding: var(--space-4);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Typography */
+    .type-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 100px;
+      gap: var(--space-6);
+      align-items: baseline;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .type-row:last-child { border-bottom: 0; }
+    .type-row .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .type-row .token {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .t-display { font-size: 48px; line-height: 1.17; font-weight: 800; letter-spacing: -0.02em; }
+    .t-h1 { font-size: 36px; line-height: 1.22; font-weight: 700; letter-spacing: -0.02em; }
+    .t-h2 { font-size: 28px; line-height: 1.29; font-weight: 700; }
+    .t-h3 { font-size: 22px; line-height: 1.36; font-weight: 700; }
+    .t-h4 { font-size: 18px; line-height: 1.44; font-weight: 600; }
+    .t-body-lg { font-size: 17px; line-height: 1.53; }
+    .t-body { font-size: 15px; line-height: 1.60; }
+    .t-body-sm { font-size: 14px; line-height: 1.57; color: var(--text-secondary); }
+    .t-caption { font-size: 12px; line-height: 1.50; color: var(--text-muted); }
+    .t-overline { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+    .t-points { font-size: 40px; line-height: 1; font-weight: 800; letter-spacing: -0.02em; color: var(--brand-atlantico); font-variant-numeric: tabular-nums; }
+
+    /* Buttons */
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-4);
+      align-items: end;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      font-family: var(--font-family);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 44px;
+      text-decoration: none;
+    }
+    .btn:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 2px; }
+    .btn-primary { background: var(--brand-azul); color: white; }
+    .btn-primary:hover { background: #1E3FB8; }
+    .btn-secondary { background: transparent; color: var(--text-primary); border-color: var(--border-strong); }
+    .btn-secondary:hover { background: var(--brand-azul-100); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { background: var(--brand-ceu-100); color: var(--brand-azul); }
+    .btn-success { background: var(--state-success); color: white; }
+    .btn-success:hover { background: var(--state-success-strong); }
+    .btn-danger { background: var(--state-error); color: white; }
+    .btn-danger:hover { background: var(--state-error-strong); }
+    .btn-lg { font-size: 17px; padding: 16px 24px; min-height: 52px; }
+    .btn-sm { font-size: 13px; padding: 8px 16px; min-height: 36px; }
+    .btn-disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-success { background: var(--state-success); color: white; }
+    .badge-error { background: var(--state-error); color: white; }
+    .badge-warning { background: var(--state-warning); color: var(--text-primary); }
+    .badge-info { background: var(--state-info); color: var(--text-primary); }
+    .badge-neutral { background: var(--state-neutral); color: white; }
+    .badge-pending { background: var(--gam-ipe); color: var(--text-primary); }
+    .badge-admin { background: var(--gam-jacaranda); color: white; }
+
+    /* Tier badges */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-4);
+    }
+    .tier-card {
+      background: var(--surface-elevated);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .tier-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 8px;
+    }
+    .tier-bronze::before { background: var(--tier-bronze); }
+    .tier-prata::before { background: var(--tier-prata); }
+    .tier-ouro::before { background: var(--tier-ouro); }
+    .tier-platina::before { background: var(--tier-platina); }
+    .tier-diamante::before { background: var(--tier-diamante); }
+    .tier-emblem {
+      width: 64px;
+      height: 64px;
+      margin: var(--space-4) auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+    }
+    .tier-bronze .tier-emblem { background: var(--tier-bronze); color: var(--text-primary); }
+    .tier-prata .tier-emblem { background: var(--tier-prata); }
+    .tier-ouro .tier-emblem { background: var(--tier-ouro); color: var(--text-primary); }
+    .tier-platina .tier-emblem { background: var(--tier-platina); }
+    .tier-diamante .tier-emblem { background: var(--tier-diamante); }
+    .tier-card .name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tier-card .points {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Card de post (mockup) */
+    .post-card-mock {
+      background: var(--surface-elevated);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      max-width: 400px;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .post-card-mock:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .post-cover {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--gradient-atlantico-ceu);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .post-content { padding: var(--space-4); }
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .post-title { font-size: 22px; font-weight: 700; line-height: 1.36; margin-bottom: var(--space-2); }
+    .post-desc { font-size: 15px; line-height: 1.60; color: var(--text-secondary); margin-bottom: var(--space-4); }
+    .checkin-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-2); }
+    .checkin-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: var(--space-3) var(--space-2);
+      border-radius: var(--radius-md);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .checkin-btn:hover { background: var(--brand-azul-100); border-color: var(--brand-azul); }
+    .checkin-btn.confirmed { background: var(--state-success); border-color: var(--state-success-strong); color: white; }
+    .checkin-btn .pts { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .checkin-btn.confirmed .pts { color: rgba(255,255,255,0.9); }
+
+    /* Network icons row */
+    .network-icons {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .network-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: var(--shadow-xs);
+    }
+    .ig { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+    .li { background: #0A66C2; }
+    .fb { background: #1877F2; }
+    .tt { background: #000000; }
+    .yt { background: #FF0000; }
+    .th { background: #000000; }
+
+    /* Spacing */
+    .space-demo {
+      display: grid;
+      grid-template-columns: 60px 1fr 60px;
+      gap: var(--space-4);
+      align-items: center;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .space-bar {
+      height: 24px;
+      background: var(--brand-azul);
+      border-radius: var(--radius-sm);
+    }
+    .space-demo .name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .space-demo .value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* Radius demo */
+    .radius-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: var(--space-4);
+    }
+    .radius-card {
+      aspect-ratio: 1;
+      background: var(--gradient-azul-taiti);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: var(--space-3);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Shadow demo */
+    .shadow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: var(--space-6);
+      padding: var(--space-6);
+      background: var(--surface-canvas);
+    }
+    .shadow-card {
+      background: var(--surface-elevated);
+      padding: var(--space-6);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .shadow-xs { box-shadow: var(--shadow-xs); }
+    .shadow-sm { box-shadow: var(--shadow-sm); }
+    .shadow-md { box-shadow: var(--shadow-md); }
+    .shadow-lg { box-shadow: var(--shadow-lg); }
+
+    /* Toast demo */
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      max-width: 360px;
+      box-shadow: var(--shadow-md);
+    }
+    .toast-success { background: var(--state-success-strong); }
+    .toast-error { background: var(--state-error-strong); }
+    .toast-info { background: var(--state-info); }
+
+    /* Footer */
+    .page-footer {
+      background: var(--brand-atlantico);
+      color: white;
+      padding: var(--space-12) var(--space-6);
+      text-align: center;
+    }
+    .page-footer p { font-size: 14px; opacity: 0.8; max-width: 720px; margin: 0 auto; }
+    .page-footer h3 { font-size: 22px; font-weight: 700; margin-bottom: var(--space-3); }
+
+    @media (max-width: 640px) {
+      .page-header h1 { font-size: 32px; }
+      .section-header h2 { font-size: 28px; }
+      .type-row { grid-template-columns: 1fr; gap: var(--space-1); }
+      .type-row .token { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="container">
+      <span class="badge-section">Brand Book v1.0 · Junho 2026</span>
+      <h1>SEBRAEIERS Design System</h1>
+      <p>Submarca endossada do SEBRAE Goiás. Paleta, tipografia, componentes e tom de voz — tudo derivado direto do Brandbook oficial SEBRAE 2026.</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ========== LOGO ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">01</div>
+        <h2>Logotipo</h2>
+        <p>Wordmark "SEBRAEIERS" — preserva "SEBRAE" no azul institucional e destaca ".iers" na cor Taiti da paleta diversa.</p>
+      </div>
+
+      <div class="logo-grid">
+        <div class="logo-card">
+          <div class="label">Principal colorida · fundo claro</div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96">
+            <g font-family="'Figtree', 'Inter', sans-serif" font-weight="800" font-style="italic" font-size="80" letter-spacing="-2">
+              <text x="0" y="74" fill="#2A4FDA">SEBRAE</text>
+              <text x="200" y="74" fill="#90D275">iers</text>
+            </g>
+            <rect x="0" y="86" width="280" height="4" fill="#0B2574" transform="skewX(-12.3)"/>
+          </svg>
+        </div>
+
+        <div class="logo-card dark">
+          <div class="label">Monocromática branca · fundo escuro</div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96">
+            <g font-family="'Figtree', 'Inter', sans-serif" font-weight="800" font-style="italic" font-size="80" letter-spacing="-2" fill="#FFFFFF">
+              <text x="0" y="74">SEBRAE</text>
+              <text x="200" y="74">iers</text>
+            </g>
+            <rect x="0" y="86" width="280" height="4" fill="#FFFFFF" transform="skewX(-12.3)"/>
+          </svg>
+        </div>
+
+        <div class="logo-card">
+          <div class="label">Ícone do app · favicon / PWA</div>
+          <svg class="logo-icon-large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+            <defs>
+              <clipPath id="rounded">
+                <rect x="0" y="0" width="256" height="256" rx="56" ry="56"/>
+              </clipPath>
+            </defs>
+            <g clip-path="url(#rounded)">
+              <rect x="0" y="0" width="256" height="256" fill="#0B2574"/>
+              <rect x="56" y="56" width="36" height="144" fill="#FFFFFF" transform="skewX(-12.3)"/>
+              <rect x="100" y="56" width="36" height="144" fill="#FFFFFF" transform="skewX(-12.3)"/>
+              <circle cx="196" cy="88" r="16" fill="#90D275"/>
+              <rect x="184" y="112" width="24" height="88" fill="#90D275" transform="skewX(-12.3)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CORES ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">02</div>
+        <h2>Cores</h2>
+        <p>100% da paleta oficial SEBRAE. Identidade em azul, gamificação na paleta diversa, semântica em derivados com contraste AA.</p>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Identidade (marca-mãe sempre presente)</div>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="swatch" style="background:#2A4FDA"><span class="hex" style="background:rgba(255,255,255,0.2);color:white">#2A4FDA</span></div>
+            <div class="info"><div class="name">Azul SEBRAE</div><div class="token">--brand-azul</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#0B2574"><span class="hex" style="background:rgba(255,255,255,0.2);color:white">#0B2574</span></div>
+            <div class="info"><div class="name">Atlântico</div><div class="token">--brand-atlantico</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#65B7FB"><span class="hex" style="background:rgba(255,255,255,0.4);color:#0B2574">#65B7FB</span></div>
+            <div class="info"><div class="name">Céu</div><div class="token">--brand-ceu</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#EFF3EE; border-bottom:1px solid #D8DDD6"><span class="hex" style="background:rgba(11,37,116,0.1);color:#0B2574">#EFF3EE</span></div>
+            <div class="info"><div class="name">Offwhite</div><div class="token">--brand-offwhite</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#000000"><span class="hex" style="background:rgba(255,255,255,0.2);color:white">#000000</span></div>
+            <div class="info"><div class="name">Preto</div><div class="token">--brand-preto</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Gamificação · tiers (paleta diversa oficial)</div>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="swatch" style="background:#F39D72"><span class="hex" style="background:rgba(255,255,255,0.3);color:#0B2574">#F39D72</span></div>
+            <div class="info"><div class="name">Bronze · 50 pts</div><div class="token">--tier-bronze</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#E0565D"><span class="hex" style="background:rgba(255,255,255,0.2);color:white">#E0565D</span></div>
+            <div class="info"><div class="name">Prata · 100 pts</div><div class="token">--tier-prata</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#FBEC76"><span class="hex" style="background:rgba(11,37,116,0.15);color:#0B2574">#FBEC76</span></div>
+            <div class="info"><div class="name">Ouro · 250 pts</div><div class="token">--tier-ouro</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#FF80C8"><span class="hex" style="background:rgba(255,255,255,0.3);color:#0B2574">#FF80C8</span></div>
+            <div class="info"><div class="name">Platina · 500 pts</div><div class="token">--tier-platina</div></div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch" style="background:#BE64E3"><span class="hex" style="background:rgba(255,255,255,0.2);color:white">#BE64E3</span></div>
+            <div class="info"><div class="name">Diamante · 1000 pts</div><div class="token">--tier-diamante</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Paleta diversa completa (apoio)</div>
+        <div class="color-grid">
+          <div class="color-swatch"><div class="swatch" style="background:#FF80C8"></div><div class="info"><div class="name">Begônia</div><div class="token">#FF80C8</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#BE64E3"></div><div class="info"><div class="name">Manacá</div><div class="token">#BE64E3</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#8F85F4"></div><div class="info"><div class="name">Jacarandá</div><div class="token">#8F85F4</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#E0565D"></div><div class="info"><div class="name">Tiê</div><div class="token">#E0565D</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#F39D72"></div><div class="info"><div class="name">Acerola</div><div class="token">#F39D72</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#F2AFAB"></div><div class="info"><div class="name">Ipê</div><div class="token">#F2AFAB</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#FBEC76"></div><div class="info"><div class="name">Canário</div><div class="token">#FBEC76</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#E7F79E"></div><div class="info"><div class="name">Umbu</div><div class="token">#E7F79E</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#CADF61"></div><div class="info"><div class="name">Pera</div><div class="token">#CADF61</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#9FF0BD"></div><div class="info"><div class="name">Menta</div><div class="token">#9FF0BD</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#90D275"></div><div class="info"><div class="name">Taiti</div><div class="token">#90D275</div></div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#61B466"></div><div class="info"><div class="name">Guaco</div><div class="token">#61B466</div></div></div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Gradientes oficiais (50% cada, 45°)</div>
+        <div class="gradient-grid">
+          <div class="gradient-card" style="background:linear-gradient(45deg, #2A4FDA 0%, #90D275 100%)">Azul → Taiti</div>
+          <div class="gradient-card" style="background:linear-gradient(45deg, #65B7FB 0%, #FF80C8 100%)">Céu → Begônia</div>
+          <div class="gradient-card" style="background:linear-gradient(45deg, #FBEC76 0%, #E7F79E 100%); color:#0B2574">Canário → Umbu</div>
+          <div class="gradient-card" style="background:linear-gradient(45deg, #0B2574 0%, #65B7FB 100%)">Atlântico → Céu</div>
+          <div class="gradient-card" style="background:linear-gradient(45deg, #F39D72 0%, #E0565D 100%)">Acerola → Tiê</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TIPOGRAFIA ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">03</div>
+        <h2>Tipografia</h2>
+        <p>Figtree (alinhada com a fonte de apoio oficial do SEBRAE). Inter como fallback. Tabular nums obrigatório em pontuação.</p>
+      </div>
+
+      <div class="type-row"><span class="label">Display</span><span class="t-display">Bem-vindo ao SEBRAEIERS</span><span class="token">48px / 800</span></div>
+      <div class="type-row"><span class="label">H1</span><span class="t-h1">Ranking do mês</span><span class="token">36px / 700</span></div>
+      <div class="type-row"><span class="label">H2</span><span class="t-h2">Posts do SEBRAE</span><span class="token">28px / 700</span></div>
+      <div class="type-row"><span class="label">H3</span><span class="t-h3">Título do post</span><span class="token">22px / 700</span></div>
+      <div class="type-row"><span class="label">H4</span><span class="t-h4">Subtítulo forte</span><span class="token">18px / 600</span></div>
+      <div class="type-row"><span class="label">Body LG</span><span class="t-body-lg">Top 50 colaboradores mais engajados do mês.</span><span class="token">17px / 400</span></div>
+      <div class="type-row"><span class="label">Body</span><span class="t-body">Sua jornada de engajamento começa agora. Curtiu um post? Conta pra gente.</span><span class="token">15px / 400</span></div>
+      <div class="type-row"><span class="label">Body SM</span><span class="t-body-sm">Texto secundário, legendas e metadados</span><span class="token">14px / 400</span></div>
+      <div class="type-row"><span class="label">Caption</span><span class="t-caption">Há 2 horas · Instagram</span><span class="token">12px / 400</span></div>
+      <div class="type-row"><span class="label">Overline</span><span class="t-overline">Posts recentes</span><span class="token">11px / 700</span></div>
+      <div class="type-row"><span class="label">Pontuação</span><span class="t-points">1.250 pts</span><span class="token">40px / 800</span></div>
+    </section>
+
+    <!-- ========== COMPONENTES ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">06</div>
+        <h2>Componentes</h2>
+        <p>Botões, badges, tiers e o card de post — os blocos fundamentais da interface.</p>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Botões</div>
+        <div class="component-grid">
+          <button class="btn btn-primary">Curtir</button>
+          <button class="btn btn-secondary">Voltar</button>
+          <button class="btn btn-ghost">Pular</button>
+          <button class="btn btn-success">Aprovar</button>
+          <button class="btn btn-danger">Rejeitar</button>
+          <button class="btn btn-primary btn-disabled" disabled>Desabilitado</button>
+          <button class="btn btn-primary btn-sm">Pequeno</button>
+          <button class="btn btn-primary btn-lg">Grande (CTA)</button>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Badges de status</div>
+        <div class="component-grid">
+          <span class="badge badge-success">✓ Aprovado</span>
+          <span class="badge badge-pending">⏳ Aguardando</span>
+          <span class="badge badge-error">✗ Rejeitado</span>
+          <span class="badge badge-info">ℹ Em análise</span>
+          <span class="badge badge-admin">⚙ Admin</span>
+          <span class="badge badge-neutral">Desativado</span>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Tiers (gamificação)</div>
+        <div class="tier-grid">
+          <div class="tier-card tier-bronze">
+            <div class="tier-emblem">50</div>
+            <div class="name">Bronze</div>
+            <div class="points">a partir de 50 pts</div>
+          </div>
+          <div class="tier-card tier-prata">
+            <div class="tier-emblem">100</div>
+            <div class="name">Prata</div>
+            <div class="points">a partir de 100 pts</div>
+          </div>
+          <div class="tier-card tier-ouro">
+            <div class="tier-emblem">250</div>
+            <div class="name">Ouro</div>
+            <div class="points">a partir de 250 pts</div>
+          </div>
+          <div class="tier-card tier-platina">
+            <div class="tier-emblem">500</div>
+            <div class="name">Platina</div>
+            <div class="points">a partir de 500 pts</div>
+          </div>
+          <div class="tier-card tier-diamante">
+            <div class="tier-emblem">1k</div>
+            <div class="name">Diamante</div>
+            <div class="points">a partir de 1000 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Card de post (mockup interativo)</div>
+        <div class="post-card-mock">
+          <div class="post-cover">Capa do post · 16:9</div>
+          <div class="post-content">
+            <div class="post-meta">
+              <span style="color:#E4405F">●</span> Instagram · há 2 horas
+            </div>
+            <h3 class="post-title">5 erros comuns ao abrir um MEI</h3>
+            <p class="post-desc">Acelerou demais e pulou etapas? Calma, dá pra corrigir. Compartilha com quem tá começando.</p>
+            <div class="checkin-buttons">
+              <button class="checkin-btn">👍 Curtir<div class="pts">+1</div></button>
+              <button class="checkin-btn">💬 Comentar<div class="pts">+2</div></button>
+              <button class="checkin-btn confirmed">↗ Compartilhar<div class="pts">+3</div></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Ícones de redes sociais</div>
+        <div class="network-icons">
+          <div class="network-icon ig" title="Instagram">IG</div>
+          <div class="network-icon li" title="LinkedIn">in</div>
+          <div class="network-icon fb" title="Facebook">f</div>
+          <div class="network-icon tt" title="TikTok">TT</div>
+          <div class="network-icon yt" title="YouTube">▶</div>
+          <div class="network-icon th" title="Threads">@</div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <div class="color-section-title">Toasts (feedback rápido)</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="toast toast-success">✓ +1 ponto! Curtida aprovada.</div>
+          <div class="toast toast-error">✗ Curtida não aprovada. Fala com a Comunicação.</div>
+          <div class="toast toast-info">ⓘ Você está na posição #23 do ranking.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ESPAÇAMENTO ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">07</div>
+        <h2>Espaçamento</h2>
+        <p>Escala em múltiplos de 4px. Mobile prefere valores menores (8-16); desktop, mais generosos (16-32).</p>
+      </div>
+
+      <div>
+        <div class="space-demo"><span class="value">4px</span><div class="space-bar" style="width:4px"></div><span class="name">--space-1</span></div>
+        <div class="space-demo"><span class="value">8px</span><div class="space-bar" style="width:8px"></div><span class="name">--space-2</span></div>
+        <div class="space-demo"><span class="value">12px</span><div class="space-bar" style="width:12px"></div><span class="name">--space-3</span></div>
+        <div class="space-demo"><span class="value">16px</span><div class="space-bar" style="width:16px"></div><span class="name">--space-4</span></div>
+        <div class="space-demo"><span class="value">20px</span><div class="space-bar" style="width:20px"></div><span class="name">--space-5</span></div>
+        <div class="space-demo"><span class="value">24px</span><div class="space-bar" style="width:24px"></div><span class="name">--space-6</span></div>
+        <div class="space-demo"><span class="value">32px</span><div class="space-bar" style="width:32px"></div><span class="name">--space-8</span></div>
+        <div class="space-demo"><span class="value">40px</span><div class="space-bar" style="width:40px"></div><span class="name">--space-10</span></div>
+        <div class="space-demo"><span class="value">48px</span><div class="space-bar" style="width:48px"></div><span class="name">--space-12</span></div>
+        <div class="space-demo"><span class="value">64px</span><div class="space-bar" style="width:64px"></div><span class="name">--space-16</span></div>
+      </div>
+    </section>
+
+    <!-- ========== RAIO ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">07</div>
+        <h2>Border Radius</h2>
+        <p>Quanto maior o elemento, maior o raio. Mantém proporção e sensação de maciez.</p>
+      </div>
+
+      <div class="radius-grid">
+        <div class="radius-card" style="border-radius:6px">6px</div>
+        <div class="radius-card" style="border-radius:10px">10px</div>
+        <div class="radius-card" style="border-radius:16px">16px</div>
+        <div class="radius-card" style="border-radius:24px">24px</div>
+        <div class="radius-card" style="border-radius:32px">32px</div>
+        <div class="radius-card" style="border-radius:9999px">full</div>
+      </div>
+    </section>
+
+    <!-- ========== SOMBRAS ========== -->
+    <section class="section">
+      <div class="section-header">
+        <div class="overline">07</div>
+        <h2>Sombras</h2>
+        <p>Atlântico com baixa opacidade — sombra azulada que combina com a marca.</p>
+      </div>
+
+      <div class="shadow-grid">
+        <div class="shadow-card shadow-xs">shadow-xs</div>
+        <div class="shadow-card shadow-sm">shadow-sm</div>
+        <div class="shadow-card shadow-md">shadow-md</div>
+        <div class="shadow-card shadow-lg">shadow-lg</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-footer">
+    <h3>SEBRAEIERS — Brand Book v1.0</h3>
+    <p>Junho 2026 · Equipe de Comunicação SEBRAE Goiás + time de produto SEBRAEIERS.<br>
+    Todo o conteúdo é derivado direto do Brandbook oficial SEBRAE 2026 (Design Bridge and Partners Brazil).</p>
+  </footer>
+
+</body>
+</html>

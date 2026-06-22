@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="SEBRAEIERS — versão monocromática">
+  <title>SEBRAEIERS (monocromática)</title>
+  <desc>Versão monocromática para fundos com limitação de cor.</desc>
+
+  <!--
+    Versão monocromática. Aplicar em uma cor só:
+    - Preta (#000000) sobre fundos claros
+    - Branca (#FFFFFF) sobre fundos escuros
+    O "currentColor" permite trocar via CSS: <svg style="color: white">
+  -->
+
+  <g font-family="'Univers Extra Bold Italic', 'Helvetica Neue', Arial, sans-serif"
+     font-weight="900"
+     font-style="italic"
+     font-size="80"
+     letter-spacing="-2"
+     fill="currentColor">
+    <text x="0" y="74">SEBRAE</text>
+    <text x="200" y="74">iers</text>
+  </g>
+
+  <rect x="0" y="86" width="280" height="4" fill="currentColor" transform="skewX(-12.3)"/>
+</svg>

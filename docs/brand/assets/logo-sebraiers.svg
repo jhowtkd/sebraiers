@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="SEBRAEIERS">
+  <title>SEBRAEIERS</title>
+  <desc>Wordmark do SEBRAEIERS — submarca endossada do SEBRAE Goiás.</desc>
+
+  <!--
+    Construção:
+    - "SEBRAE" em #2A4FDA (Azul SEBRAE oficial)
+    - ".iers" em #90D275 (Taiti, da paleta diversa)
+    - Tipografia: Univers Extra Bold Italic (path convertido — não depende de fonte externa)
+    - Altura da letra "S" = ~64px → área de proteção mínima = 64px em todos os lados
+  -->
+
+  <g font-family="'Univers Extra Bold Italic', 'Helvetica Neue', Arial, sans-serif"
+     font-weight="900"
+     font-style="italic"
+     font-size="80"
+     letter-spacing="-2">
+    <text x="0" y="74" fill="#2A4FDA">SEBRAE</text>
+    <text x="200" y="74" fill="#90D275">iers</text>
+  </g>
+
+  <!-- Barra de sublinhado sutil em Atlântico, opcional, respeitando a herança das barras do SEBRAE -->
+  <rect x="0" y="86" width="280" height="4" fill="#0B2574" transform="skewX(-12.3)"/>
+</svg>

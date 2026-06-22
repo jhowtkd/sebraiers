@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SEBRAEIERS — ícone">
+  <title>SEBRAEIERS (ícone)</title>
+  <desc>Ícone do app — barras SEBRAE estilizadas + ponto verde.</desc>
+
+  <!--
+    Ícone do app / favicon / PWA.
+    - Fundo: Atlântico (#0B2574)
+    - Barras: branco (#FFFFFF) — mesma inclinação 77,7° das barras do logo SEBRAE
+    - Ponto do "i": Taiti (#90D275)
+    - Cantos arredondados (raio 32 = ~12.5%) — estilo iOS / Material
+  -->
+
+  <defs>
+    <clipPath id="rounded">
+      <rect x="0" y="0" width="256" height="256" rx="56" ry="56"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#rounded)">
+    <!-- Fundo Atlântico -->
+    <rect x="0" y="0" width="256" height="256" fill="#0B2574"/>
+
+    <!-- Barras SEBRAE estilizadas (inclinação 77,7°) -->
+    <!-- Barra 1 -->
+    <rect x="56" y="56" width="36" height="144" fill="#FFFFFF" transform="skewX(-12.3)"/>
+    <!-- Barra 2 (sobreposta à direita) -->
+    <rect x="100" y="56" width="36" height="144" fill="#FFFFFF" transform="skewX(-12.3)"/>
+
+    <!-- Ponto do "i" (verde Taiti) -->
+    <circle cx="196" cy="88" r="16" fill="#90D275"/>
+
+    <!-- Haste do "i" (mesma inclinação das barras) -->
+    <rect x="184" y="112" width="24" height="88" fill="#90D275" transform="skewX(-12.3)"/>
+  </g>
+</svg>
