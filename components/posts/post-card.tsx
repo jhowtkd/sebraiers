@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { MessageCircle, ExternalLink } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ReactionBar } from '@/components/social/reaction-bar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { NETWORK_LABELS, type Post } from '@/lib/types';
@@ -99,16 +100,21 @@ export function PostCard({ post, engagement }: Props) {
       </div>
 
       {/* footer */}
-      <footer className="px-3 pb-3 flex items-center justify-between text-caption text-text-muted">
-        <time dateTime={post.published_at}>{time}</time>
+      <footer className="px-3 pb-3 space-y-2">
         <a
           href={post.original_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 hover:text-brand-azul"
+          className="block"
+          aria-label={`Engajar na publicação (${networkLabel})`}
         >
-          via {networkLabel} <ExternalLink className="h-3 w-3" />
+          <Button className="w-full" size="lg">
+            ENGAJAR
+          </Button>
         </a>
+        <p className="text-caption text-text-muted text-center">
+          {time} · via {networkLabel}
+        </p>
       </footer>
     </article>
   );
