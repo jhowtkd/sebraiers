@@ -52,8 +52,8 @@ export function PostCard({ post, engagement }: Props) {
         </div>
       </header>
 
-      {/* TITLE: editorial hero, max 2 lines (brand spec) */}
-      <h3 className="px-6 pb-2 text-h2 font-bold text-text-primary leading-[1.15] tracking-tight line-clamp-2">
+      {/* TITLE: editorial hero — shown in full, no line-clamp */}
+      <h3 className="px-6 pb-2 text-h2 font-bold text-text-primary leading-[1.15] tracking-tight">
         {post.title}
       </h3>
 
