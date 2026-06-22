@@ -65,19 +65,7 @@ export function PostCard({ post, engagement }: Props) {
         </time>
       </header>
 
-      {/* cover (clickable to detail) */}
-      <Link href={`/post/${post.id}`} aria-label={`Ver detalhe de ${post.title}`}>
-        <figure className="aspect-square w-full bg-surface-sunken overflow-hidden">
-          {post.cover_url ? (
-            <img
-              src={post.cover_url}
-              alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : null}
-        </figure>
-      </Link>
+      {/* cover (hidden for now — user wants title-only feed) */}
 
       {/* action bar */}
       {engagement && (
