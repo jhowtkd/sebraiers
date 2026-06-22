@@ -14,7 +14,6 @@ export type SyncSummary = {
   created: number;
   updated: number;
   skipped_stories: number;
-  skipped_no_url: number;
   errors: number;
   og_images_found: number;
 };
@@ -34,7 +33,6 @@ export async function runSync(opts: RunSyncOptions): Promise<SyncSummary> {
     created: 0,
     updated: 0,
     skipped_stories: 0,
-    skipped_no_url: 0,
     errors: 0,
     og_images_found: 0,
   };
@@ -51,10 +49,6 @@ export async function runSync(opts: RunSyncOptions): Promise<SyncSummary> {
 
   for (const row of normalized) {
     try {
-      if (!row.original_url) {
-        summary.skipped_no_url++;
-        continue;
-      }
       if (isStoryUrl(row.original_url)) {
         summary.skipped_stories++;
         continue;

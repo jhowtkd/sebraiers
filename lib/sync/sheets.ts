@@ -66,7 +66,12 @@ function parseDate(value: string): string {
   const br = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/);
   if (br) {
     const [, d, m, y, rest] = br;
-    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}${rest || 'T00:00:00.000Z'}`;
+    const time = rest
+      ? rest.startsWith('T')
+        ? rest
+        : `T${rest.trim()}`
+      : 'T00:00:00.000Z';
+    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}${time}`;
     const dt = new Date(iso);
     if (!isNaN(dt.getTime())) return dt.toISOString();
   }

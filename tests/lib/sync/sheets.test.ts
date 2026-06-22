@@ -88,6 +88,27 @@ describe('parseColumns', () => {
     ]);
     expect(out[0].published_at).toBe('2025-02-01T00:00:00.000Z');
   });
+
+  it('parses BR dd/mm/yyyy dates with space-separated time component (no silent corruption to today)', () => {
+    const out = parseColumns([
+      { link_post: 'https://x.com/br-time-space', data_publicacao: '01/02/2025 14:30' },
+    ]);
+    const parsed = new Date(out[0].published_at).getTime();
+    const localExpected = new Date(2025, 1, 1, 14, 30).getTime();
+    expect(parsed).toBe(localExpected);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expect(parsed).not.toBe(today.getTime());
+  });
+
+  it('parses BR dd/mm/yyyy dates with T-separated time component', () => {
+    const out = parseColumns([
+      { link_post: 'https://x.com/br-time-t', data_publicacao: '01/02/2025T14:30' },
+    ]);
+    const parsed = new Date(out[0].published_at).getTime();
+    const localExpected = new Date(2025, 1, 1, 14, 30).getTime();
+    expect(parsed).toBe(localExpected);
+  });
 });
 
 describe('detectNetwork', () => {
