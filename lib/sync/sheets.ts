@@ -31,9 +31,19 @@ export type NormalizedRow = {
 };
 
 export async function fetchSheetCSV(sheetId: string, gid: string): Promise<SheetRow[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=csv&gid=${encodeURIComponent(gid)}`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'SEBRAEIERS-Sync/1.0' } });
-  if (!res.ok) throw new Error(`Sheet fetch failed: HTTP ${res.status}`);
+  const id = encodeURIComponent(sheetId);
+  const g = encodeURIComponent(gid);
+  const headers = { 'User-Agent': 'SEBRAEIERS-Sync/1.0' };
+  const exportUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${g}`;
+  let res = await fetch(exportUrl, { headers });
+  if (!res.ok) {
+    // Fallback: gviz/tq endpoint works for sheets published via "File > Publish to web"
+    // even when /export returns 400. Used as a last-resort so a partially-public sheet
+    // can still be synced.
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${g}`;
+    res = await fetch(gvizUrl, { headers });
+    if (!res.ok) throw new Error(`Sheet fetch failed: HTTP ${res.status} (tried /export and /gviz/tq)`);
+  }
   const csv = await res.text();
   const parsed = Papa.parse<SheetRow>(csv, { header: true, skipEmptyLines: true });
   if (parsed.errors.length > 0) {

@@ -23,7 +23,9 @@ describe('fetchSheetCSV', () => {
   });
 
   it('throws on non-ok response', async () => {
-    fetchMock.mockResolvedValueOnce({ ok: false, status: 500, text: () => Promise.resolve('') });
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 500, text: () => Promise.resolve('') })
+      .mockResolvedValueOnce({ ok: false, status: 500, text: () => Promise.resolve('') });
     await expect(fetchSheetCSV('sheet', '0')).rejects.toThrow(/500/);
   });
 
@@ -43,6 +45,24 @@ describe('fetchSheetCSV', () => {
       'https://docs.google.com/spreadsheets/d/sheet%2Fwith%20spaces/export?format=csv&gid=0',
       expect.objectContaining({ headers: expect.any(Object) })
     );
+  });
+
+  it('falls back to gviz/tq when /export returns non-ok', async () => {
+    const csv = 'link_post,titulo\nhttps://example.com/p/1,Hello';
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 400, text: () => Promise.resolve('') })
+      .mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve(csv) });
+    const rows = await fetchSheetCSV('sheet123', '0');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toContain('/gviz/tq');
+    expect(rows).toEqual([{ link_post: 'https://example.com/p/1', titulo: 'Hello' }]);
+  });
+
+  it('throws when both /export and /gviz/tq fail', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 400, text: () => Promise.resolve('') })
+      .mockResolvedValueOnce({ ok: false, status: 403, text: () => Promise.resolve('') });
+    await expect(fetchSheetCSV('sheet', '0')).rejects.toThrow(/tried \/export and \/gviz\/tq/);
   });
 });
 
