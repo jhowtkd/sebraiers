@@ -29,7 +29,7 @@ export function PostCard({ post, engagement }: Props) {
   const time = formatRelative(post.published_at);
 
   return (
-    <article className="group bg-surface-elevated rounded-2xl border border-border-subtle shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
+    <article className="group bg-surface-elevated rounded-2xl border border-border-subtle shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md focus-within:shadow-md focus-within:ring-2 focus-within:ring-brand-azul/30 focus-within:ring-offset-2 focus-within:ring-offset-surface-canvas">
       {/* KICKER: network anchor + meta */}
       <header className="flex items-start gap-3 px-6 pt-5 pb-3">
         <div
@@ -52,14 +52,14 @@ export function PostCard({ post, engagement }: Props) {
         </div>
       </header>
 
-      {/* TITLE: editorial hero */}
-      <h3 className="px-6 text-h2 font-bold text-text-primary leading-[1.15] tracking-tight">
+      {/* TITLE: editorial hero, max 2 lines (brand spec) */}
+      <h3 className="px-6 pb-2 text-h2 font-bold text-text-primary leading-[1.15] tracking-tight line-clamp-2">
         {post.title}
       </h3>
 
       {/* DESCRIPTION: 3 lines max */}
       {post.description && (
-        <p className="px-6 pt-2 pb-5 text-body text-text-secondary line-clamp-3 leading-relaxed">
+        <p className="px-6 pb-5 text-body text-text-secondary line-clamp-3 leading-relaxed">
           {post.description}
         </p>
       )}
@@ -84,21 +84,21 @@ export function PostCard({ post, engagement }: Props) {
         </div>
       )}
 
-      {/* ENGAJAR: the action star */}
+      {/* ENGAJAR: the action star, in brand Guaco green */}
       <div className="px-6 pt-2 pb-6">
         <a
           href={post.original_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block group/cta"
+          className="block group/cta rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-state-success/40"
           aria-label={`Engajar no ${networkLabel}`}
         >
           <Button
             size="lg"
-            className="w-full h-14 px-5 text-body-lg font-bold gap-2 rounded-xl"
+            className="w-full h-14 px-5 text-body-lg font-bold gap-2 rounded-xl bg-state-success hover:bg-state-success-strong text-white border-0"
           >
             <span>ENGAJAR</span>
-            <span className="font-normal text-white/70 text-caption hidden sm:inline">
+            <span className="font-normal text-white/80 text-caption hidden sm:inline">
               no {networkLabel}
             </span>
             <ArrowUpRight
