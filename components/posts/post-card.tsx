@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
+import { ArrowUpRight, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReactionBar } from '@/components/social/reaction-bar';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { NetworkIcon } from '@/components/ui/network-icon';
 import { NETWORK_LABELS, type Post, type Network } from '@/lib/types';
 import type { PostEngagement } from '@/lib/queries/posts';
-import { initials, formatRelative } from '@/lib/utils';
+import { cn, formatRelative } from '@/lib/utils';
 
 type Props = {
   post: Post;
@@ -24,52 +23,50 @@ const NETWORK_AVATAR_BG: Record<Network, string> = {
 };
 
 export function PostCard({ post, engagement }: Props) {
-  const author = post.author ?? null;
   const isSynced = Boolean((post as Post & { external_id?: string | null }).external_id);
-  const authorName = isSynced ? 'Sebrae Goiás' : author?.full_name ?? 'Anônimo';
-  const authorUsername = isSynced ? 'sebraegoias' : author?.username ?? 'anônimo';
+  const authorUsername = isSynced ? 'sebraegoias' : post.author?.username ?? 'anônimo';
   const networkLabel = NETWORK_LABELS[post.network];
   const time = formatRelative(post.published_at);
 
   return (
-    <article className="bg-surface-elevated rounded-xl border border-border-subtle overflow-hidden">
-      {/* header */}
-      <header className="flex items-center gap-3 p-3">
-        {isSynced ? (
-          <div
-            className={`h-8 w-8 flex-shrink-0 rounded-full flex items-center justify-center text-white ${NETWORK_AVATAR_BG[post.network]}`}
-            aria-label={`${networkLabel} avatar`}
-          >
-            <NetworkIcon network={post.network} className="h-4 w-4" />
-          </div>
-        ) : (
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            {author?.avatar_url && (
-              <AvatarImage src={author.avatar_url} alt={authorName} />
-            )}
-            <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">
-              {initials(authorName)}
-            </AvatarFallback>
-          </Avatar>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-body-sm font-semibold text-text-primary truncate">
-            {authorName}
+    <article className="group bg-surface-elevated rounded-2xl border border-border-subtle shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
+      {/* KICKER: network anchor + meta */}
+      <header className="flex items-start gap-3 px-6 pt-5 pb-3">
+        <div
+          className={cn(
+            'h-12 w-12 flex-shrink-0 rounded-full flex items-center justify-center text-white',
+            NETWORK_AVATAR_BG[post.network]
+          )}
+          aria-hidden
+        >
+          <NetworkIcon network={post.network} className="h-6 w-6" />
+        </div>
+        <div className="flex-1 min-w-0 pt-1.5">
+          <p className="text-caption font-bold uppercase tracking-[0.08em] text-text-primary">
+            {networkLabel}
+            <span className="text-text-muted font-normal tracking-normal"> · @{authorUsername}</span>
           </p>
-          <p className="text-caption text-text-muted truncate">
-            @{authorUsername} · via {networkLabel}
+          <p className="text-caption text-text-secondary tabular-nums">
+            {time}
           </p>
         </div>
-        <time dateTime={post.published_at} className="text-caption text-text-muted flex-shrink-0">
-          {time}
-        </time>
       </header>
 
-      {/* cover (hidden for now — user wants title-only feed) */}
+      {/* TITLE: editorial hero */}
+      <h3 className="px-6 text-h2 font-bold text-text-primary leading-[1.15] tracking-tight">
+        {post.title}
+      </h3>
 
-      {/* action bar */}
+      {/* DESCRIPTION: 3 lines max */}
+      {post.description && (
+        <p className="px-6 pt-2 pb-5 text-body text-text-secondary line-clamp-3 leading-relaxed">
+          {post.description}
+        </p>
+      )}
+
+      {/* REACTIONS: subtle row */}
       {engagement && (
-        <div className="flex items-center gap-1 px-3 py-2 border-b border-border-subtle">
+        <div className="flex items-center justify-between gap-2 px-6 py-3 border-t border-border-subtle/60">
           <ReactionBar
             target="post"
             targetId={post.id}
@@ -78,7 +75,7 @@ export function PostCard({ post, engagement }: Props) {
           />
           <Link
             href={`/post/${post.id}#conversa`}
-            className="ml-auto inline-flex items-center gap-1 text-caption text-text-muted hover:text-brand-azul"
+            className="inline-flex items-center gap-1 text-caption text-text-muted hover:text-brand-azul transition-colors shrink-0"
             aria-label={`Ver ${engagement.commentCount} comentários`}
           >
             <MessageCircle className="h-4 w-4" />
@@ -87,44 +84,30 @@ export function PostCard({ post, engagement }: Props) {
         </div>
       )}
 
-      {/* caption */}
-      <div className="px-3 py-3 space-y-1">
-        <p className="text-body-sm text-text-primary">
-          <span className="font-semibold">{authorUsername}</span>{' '}
-          {post.title}
-        </p>
-        {post.description && (
-          <p className="text-body-sm text-text-secondary line-clamp-3">
-            {post.description}
-          </p>
-        )}
-        {engagement && engagement.commentCount > 0 && (
-          <Link
-            href={`/post/${post.id}#conversa`}
-            className="block text-caption text-text-muted hover:text-brand-azul"
-          >
-            Ver todos os {engagement.commentCount} comentários
-          </Link>
-        )}
-      </div>
-
-      {/* footer */}
-      <footer className="px-3 pb-3 space-y-2">
+      {/* ENGAJAR: the action star */}
+      <div className="px-6 pt-2 pb-6">
         <a
           href={post.original_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block"
-          aria-label={`Engajar na publicação (${networkLabel})`}
+          className="block group/cta"
+          aria-label={`Engajar no ${networkLabel}`}
         >
-          <Button className="w-full" size="lg">
-            ENGAJAR
+          <Button
+            size="lg"
+            className="w-full h-14 px-5 text-body-lg font-bold gap-2 rounded-xl"
+          >
+            <span>ENGAJAR</span>
+            <span className="font-normal text-white/70 text-caption hidden sm:inline">
+              no {networkLabel}
+            </span>
+            <ArrowUpRight
+              className="h-5 w-5 ml-auto transition-transform duration-200 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
+              aria-hidden
+            />
           </Button>
         </a>
-        <p className="text-caption text-text-muted text-center">
-          {time} · via {networkLabel}
-        </p>
-      </footer>
+      </div>
     </article>
   );
 }
