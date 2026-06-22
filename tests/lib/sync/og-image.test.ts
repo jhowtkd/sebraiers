@@ -14,10 +14,10 @@ describe('fetchOgImage', () => {
     expect(await fetchOgImage('https://x.com/p/1')).toBe('https://cdn.example.com/img.jpg');
   });
 
-  it('returns null when og:image meta has content before property (unsupported attribute order)', async () => {
+  it('extracts og:image when attribute order is swapped (content before property)', async () => {
     const html = '<html><head><meta content="https://cdn.example.com/img2.jpg" property="og:image"></head></html>';
     fetchMock.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(html) });
-    expect(await fetchOgImage('https://x.com/p/1')).toBeNull();
+    expect(await fetchOgImage('https://x.com/p/1')).toBe('https://cdn.example.com/img2.jpg');
   });
 
   it('returns null on non-ok response', async () => {

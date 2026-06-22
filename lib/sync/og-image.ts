@@ -9,8 +9,16 @@ export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<strin
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    return m?.[1] ?? null;
+    // Try property-before-content first (most common), then content-before-property.
+    const patterns = [
+      /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
+    ];
+    for (const re of patterns) {
+      const m = html.match(re);
+      if (m) return m[1];
+    }
+    return null;
   } catch {
     return null;
   } finally {
