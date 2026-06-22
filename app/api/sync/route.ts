@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { runSync, type SyncSummary } from '@/lib/sync';
 
 export async function POST(request: NextRequest) {
@@ -33,7 +34,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const summary: SyncSummary = await runSync({ sheetId, gid, colMap, adminId: serviceAdminId });
+    const admin = getAdminClient();
+    const summary: SyncSummary = await runSync({
+      sheetId,
+      gid,
+      colMap,
+      adminId: serviceAdminId,
+      client: admin,
+    });
     return NextResponse.json(summary);
   } catch (e) {
     return NextResponse.json(

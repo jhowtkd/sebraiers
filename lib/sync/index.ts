@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   fetchSheetCSV,
   parseColumns,
@@ -24,6 +25,7 @@ type RunSyncOptions = {
   colMap?: Record<string, string>;
   adminId: string;
   dryRun?: boolean;
+  client?: SupabaseClient;
 };
 
 export async function runSync(opts: RunSyncOptions): Promise<SyncSummary> {
@@ -45,7 +47,7 @@ export async function runSync(opts: RunSyncOptions): Promise<SyncSummary> {
   }
 
   const normalized = parseColumns(rows, colMap);
-  const supabase = await createClient();
+  const supabase: SupabaseClient = opts.client ?? (await createClient());
 
   for (const row of normalized) {
     try {
