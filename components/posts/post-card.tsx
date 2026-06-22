@@ -3,7 +3,8 @@ import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReactionBar } from '@/components/social/reaction-bar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { NETWORK_LABELS, type Post } from '@/lib/types';
+import { NetworkIcon } from '@/components/ui/network-icon';
+import { NETWORK_LABELS, type Post, type Network } from '@/lib/types';
 import type { PostEngagement } from '@/lib/queries/posts';
 import { initials, formatRelative } from '@/lib/utils';
 
@@ -12,10 +13,21 @@ type Props = {
   engagement?: PostEngagement;
 };
 
+const NETWORK_AVATAR_BG: Record<Network, string> = {
+  instagram: 'bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af]',
+  linkedin: 'bg-[#0a66c2]',
+  facebook: 'bg-[#1877f2]',
+  tiktok: 'bg-black',
+  youtube: 'bg-[#ff0000]',
+  threads: 'bg-black',
+  x: 'bg-black',
+};
+
 export function PostCard({ post, engagement }: Props) {
   const author = post.author ?? null;
-  const authorName = author?.full_name ?? 'Anônimo';
-  const authorUsername = author?.username ?? 'anônimo';
+  const isSynced = Boolean((post as Post & { external_id?: string | null }).external_id);
+  const authorName = isSynced ? 'Sebrae Goiás' : author?.full_name ?? 'Anônimo';
+  const authorUsername = isSynced ? 'sebraegoias' : author?.username ?? 'anônimo';
   const networkLabel = NETWORK_LABELS[post.network];
   const time = formatRelative(post.published_at);
 
@@ -23,14 +35,23 @@ export function PostCard({ post, engagement }: Props) {
     <article className="bg-surface-elevated rounded-xl border border-border-subtle overflow-hidden">
       {/* header */}
       <header className="flex items-center gap-3 p-3">
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          {author?.avatar_url && (
-            <AvatarImage src={author.avatar_url} alt={authorName} />
-          )}
-          <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">
-            {initials(authorName)}
-          </AvatarFallback>
-        </Avatar>
+        {isSynced ? (
+          <div
+            className={`h-8 w-8 flex-shrink-0 rounded-full flex items-center justify-center text-white ${NETWORK_AVATAR_BG[post.network]}`}
+            aria-label={`${networkLabel} avatar`}
+          >
+            <NetworkIcon network={post.network} className="h-4 w-4" />
+          </div>
+        ) : (
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            {author?.avatar_url && (
+              <AvatarImage src={author.avatar_url} alt={authorName} />
+            )}
+            <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">
+              {initials(authorName)}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-body-sm font-semibold text-text-primary truncate">
             {authorName}

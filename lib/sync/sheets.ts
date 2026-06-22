@@ -138,6 +138,16 @@ export function isStoryUrl(url: string): boolean {
   }
 }
 
+export function parseColMap(value: string | undefined): Record<string, string> | undefined {
+  if (!value) return undefined;
+  const out: Record<string, string> = {};
+  for (const kv of value.split(',')) {
+    const [k, v] = kv.split('=') as [string, string];
+    if (k && v) out[k.trim()] = v.trim();
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 export function parseColumns(
   rows: SheetRow[],
   colMap?: Record<string, string>,

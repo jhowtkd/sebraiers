@@ -1,7 +1,7 @@
 'use server';
 
 import { getCurrentProfile } from '@/lib/auth';
-import { runSync, type SyncSummary } from '@/lib/sync';
+import { runSync, type SyncSummary, parseColMap } from '@/lib/sync';
 
 export type SyncActionResult =
   | { ok: true; summary: SyncSummary }
@@ -14,13 +14,7 @@ export async function runSyncAction(): Promise<SyncActionResult> {
 
   const sheetId = process.env.SHEET_ID;
   const gid = process.env.SHEET_GID ?? '0';
-  const colMap = process.env.SHEET_COL_MAP
-    ? Object.fromEntries(
-        process.env.SHEET_COL_MAP.split(',')
-          .map((kv) => kv.split('=') as [string, string])
-          .filter(([k, v]) => k && v)
-      )
-    : undefined;
+  const colMap = parseColMap(process.env.SHEET_COL_MAP);
   if (!sheetId) return { ok: false, error: 'SHEET_ID não configurado' };
 
   try {

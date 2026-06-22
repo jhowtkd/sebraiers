@@ -4,11 +4,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   fetchSheetCSV,
   parseColumns,
+  parseColMap,
   sha256,
   isStoryUrl,
   type SheetRow,
 } from './sheets';
 import { fetchOgImage } from './og-image';
+
+export { parseColMap };
 
 export type SyncSummary = {
   created: number;
@@ -84,6 +87,7 @@ export async function runSync(opts: RunSyncOptions): Promise<SyncSummary> {
             original_url: row.original_url,
             cover_url: cover_url ?? existing.cover_url ?? null,
             published_at: row.published_at,
+            created_by: adminId,
             last_synced_at: now,
           })
           .eq('id', existing.id);

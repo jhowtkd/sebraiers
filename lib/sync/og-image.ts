@@ -1,3 +1,12 @@
+// Reject well-known wrong-og:image patterns. X/Twitter sets the user's
+// avatar as og:image on status pages instead of the post's first media;
+// we filter those out so the sync doesn't surface a profile picture as a
+// post thumbnail. Extend cautiously.
+function isValidPostImage(url: string): boolean {
+  if (/pbs\.twimg\.com\/profile_images\//.test(url)) return false;
+  return true;
+}
+
 export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<string | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -16,7 +25,7 @@ export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<strin
     ];
     for (const re of patterns) {
       const m = html.match(re);
-      if (m) return m[1];
+      if (m && isValidPostImage(m[1])) return m[1];
     }
     return null;
   } catch {

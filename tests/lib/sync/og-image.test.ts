@@ -34,4 +34,10 @@ describe('fetchOgImage', () => {
     fetchMock.mockRejectedValueOnce(new Error('aborted'));
     expect(await fetchOgImage('https://x.com/p/1')).toBeNull();
   });
+
+  it('rejects og:image pointing at X profile picture (not a post image)', async () => {
+    const html = '<html><head><meta property="og:image" content="https://pbs.twimg.com/profile_images/abc/avatar_200x200.jpg"></head></html>';
+    fetchMock.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(html) });
+    expect(await fetchOgImage('https://x.com/sebraego/status/123')).toBeNull();
+  });
 });
