@@ -3,6 +3,11 @@ import path from 'node:path';
 
 export default defineConfig({
   test: { environment: 'happy-dom', setupFiles: ['./tests/setup.ts'], globals: true },
-  resolve: { alias: { '@': path.resolve(__dirname, './') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+      'server-only': path.resolve(__dirname, './tests/__mocks__/server-only.ts'),
+    },
+  },
   esbuild: { jsx: 'automatic' },
 });
