@@ -26,6 +26,24 @@ describe('fetchSheetCSV', () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 500, text: () => Promise.resolve('') });
     await expect(fetchSheetCSV('sheet', '0')).rejects.toThrow(/500/);
   });
+
+  it('tolerates non-fatal papaparse warnings (e.g., FieldMismatch)', async () => {
+    const csv = 'link_post,titulo\nhttps://example.com/p/1,Hello\nhttps://example.com/p/2,World';
+    fetchMock.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(csv) });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await expect(fetchSheetCSV('sheet123', '0')).resolves.toBeDefined();
+    warnSpy.mockRestore();
+  });
+
+  it('URL-encodes sheetId to defend against special chars', async () => {
+    const csv = 'link_post,titulo\nhttps://example.com/p/1,Hello';
+    fetchMock.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(csv) });
+    await fetchSheetCSV('sheet/with spaces', '0');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://docs.google.com/spreadsheets/d/sheet%2Fwith%20spaces/export?format=csv&gid=0',
+      expect.objectContaining({ headers: expect.any(Object) })
+    );
+  });
 });
 
 describe('parseColumns', () => {
@@ -37,7 +55,7 @@ describe('parseColumns', () => {
       original_url: 'https://x.com/1',
       title: 'A',
       description: 'd',
-      published_at: '2025-01-01',
+      published_at: '2025-01-01T00:00:00.000Z',
       network: 'instagram',
       cover_url: undefined,
     }]);
@@ -48,13 +66,27 @@ describe('parseColumns', () => {
       [{ URL: 'https://x.com/2', Title: 'B', Date: '2025-02-02' }],
       { link_post: 'URL', titulo: 'Title', data_publicacao: 'Date' }
     );
-    expect(out[0]).toMatchObject({ original_url: 'https://x.com/2', title: 'B', published_at: '2025-02-02' });
+    expect(out[0]).toMatchObject({ original_url: 'https://x.com/2', title: 'B', published_at: '2025-02-02T00:00:00.000Z' });
   });
 
   it('skips rows without original_url', () => {
     const out = parseColumns([{ titulo: 'No URL' }, { link_post: 'https://x.com/3', titulo: 'OK' }]);
     expect(out).toHaveLength(1);
     expect(out[0].original_url).toBe('https://x.com/3');
+  });
+
+  it('normalizes ISO dates to full ISO strings', () => {
+    const out = parseColumns([
+      { link_post: 'https://x.com/iso', data_publicacao: '2025-01-01' },
+    ]);
+    expect(out[0].published_at).toBe('2025-01-01T00:00:00.000Z');
+  });
+
+  it('parses BR dd/mm/yyyy dates to ISO', () => {
+    const out = parseColumns([
+      { link_post: 'https://x.com/br', data_publicacao: '01/02/2025' },
+    ]);
+    expect(out[0].published_at).toBe('2025-02-01T00:00:00.000Z');
   });
 });
 

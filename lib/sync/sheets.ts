@@ -31,14 +31,17 @@ export type NormalizedRow = {
 };
 
 export async function fetchSheetCSV(sheetId: string, gid: string): Promise<SheetRow[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${encodeURIComponent(gid)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/export?format=csv&gid=${encodeURIComponent(gid)}`;
   const res = await fetch(url, { headers: { 'User-Agent': 'SEBRAEIERS-Sync/1.0' } });
   if (!res.ok) throw new Error(`Sheet fetch failed: HTTP ${res.status}`);
   const csv = await res.text();
   const parsed = Papa.parse<SheetRow>(csv, { header: true, skipEmptyLines: true });
   if (parsed.errors.length > 0) {
-    const first = parsed.errors[0];
-    throw new Error(`CSV parse error: ${first.message} (row ${first.row})`);
+    const fatal = parsed.errors.find((e) => e.type === 'Delimiter' || e.code === 'UndetectableDelimiter');
+    if (fatal) {
+      throw new Error(`CSV parse fatal: ${fatal.message} (row ${fatal.row})`);
+    }
+    console.warn(`[sync] CSV has ${parsed.errors.length} non-fatal parse warnings (e.g., ragged rows); continuing`);
   }
   return parsed.data;
 }
@@ -57,7 +60,19 @@ function buildCanonicalMap(override?: Record<string, string>): Record<string, st
 }
 
 function parseDate(value: string): string {
-  return value.trim();
+  const trimmed = value.trim();
+  if (!trimmed) return new Date().toISOString();
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return new Date(trimmed).toISOString();
+  const br = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/);
+  if (br) {
+    const [, d, m, y, rest] = br;
+    const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}${rest || 'T00:00:00.000Z'}`;
+    const dt = new Date(iso);
+    if (!isNaN(dt.getTime())) return dt.toISOString();
+  }
+  const d = new Date(trimmed);
+  if (!isNaN(d.getTime())) return d.toISOString();
+  return new Date().toISOString();
 }
 
 export function detectNetwork(url: string): Network {
