@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
 
-import { fetchSheetCSV, parseColumns, detectNetwork, isStoryUrl } from '@/lib/sync/sheets';
+import { fetchSheetCSV, parseColumns, detectNetwork, parseRede, isStoryUrl } from '@/lib/sync/sheets';
 
 beforeEach(() => { fetchMock.mockReset(); });
 
@@ -138,7 +138,46 @@ describe('detectNetwork', () => {
   it('detects tiktok', () => expect(detectNetwork('https://tiktok.com/@sebraego')).toBe('tiktok'));
   it('detects youtube', () => expect(detectNetwork('https://youtube.com/shorts/abc')).toBe('youtube'));
   it('detects threads', () => expect(detectNetwork('https://threads.net/@sebraego')).toBe('threads'));
+  it('detects x.com (Twitter)', () => expect(detectNetwork('https://x.com/sebraego/status/123')).toBe('x'));
+  it('detects twitter.com', () => expect(detectNetwork('https://twitter.com/sebraego/status/123')).toBe('x'));
   it('falls back to instagram for unknown', () => expect(detectNetwork('https://example.com/foo')).toBe('instagram'));
+});
+
+describe('parseRede', () => {
+  const IG = 'https://www.instagram.com/p/abc/';
+  const LI = 'https://www.linkedin.com/feed/update/urn:li:activity:123';
+  const XURL = 'https://x.com/sebraego/status/123';
+  const TT = 'https://www.tiktok.com/@x/video/123';
+  const TH = 'https://www.threads.com/@x/post/abc';
+
+  it('parses Network/Format (LinkedIn/Artigo)', () => {
+    expect(parseRede('LinkedIn/Artigo', LI)).toBe('linkedin');
+  });
+  it('parses Network/Format (Instagram/Carrossel)', () => {
+    expect(parseRede('Instagram/Carrossel', IG)).toBe('instagram');
+  });
+  it('parses Network:Format/Type (Instagram:Feed/Story)', () => {
+    expect(parseRede('Instagram:Feed/Story', IG)).toBe('instagram');
+  });
+  it('parses plain Threads', () => {
+    expect(parseRede('Threads', TH)).toBe('threads');
+  });
+  it('parses plain TikTok', () => {
+    expect(parseRede('TikTok', TT)).toBe('tiktok');
+  });
+  it('parses plain X', () => {
+    expect(parseRede('X', XURL)).toBe('x');
+  });
+  it('lowercases the head', () => {
+    expect(parseRede('x', XURL)).toBe('x');
+  });
+  it('falls back to detectNetwork for empty rede', () => {
+    expect(parseRede('', IG)).toBe('instagram');
+    expect(parseRede(undefined, XURL)).toBe('x');
+  });
+  it('falls back to detectNetwork for unknown rede', () => {
+    expect(parseRede('Mastodon/Something', IG)).toBe('instagram');
+  });
 });
 
 describe('isStoryUrl', () => {

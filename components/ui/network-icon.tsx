@@ -10,5 +10,6 @@ export function NetworkIcon({ network, className }: { network: Network; classNam
     case 'youtube': return <Youtube className={cls} aria-label="YouTube" />;
     case 'tiktok': return <span className={cls + ' font-bold text-caption'} aria-label="TikTok">T</span>;
     case 'threads': return <span className={cls + ' font-bold text-caption'} aria-label="Threads">@</span>;
+    case 'x': return <span className={cls + ' font-bold text-caption'} aria-label="X (Twitter)">𝕏</span>;
   }
 }

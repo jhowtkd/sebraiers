@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { NETWORK_LABELS, type Network } from '@/lib/types';
 
-const NETWORKS: (Network | 'all')[] = ['all', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube', 'threads'];
+const NETWORKS: (Network | 'all')[] = ['all', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube', 'threads', 'x'];
 
 export function PostFilters() {
   const router = useRouter();

@@ -99,10 +99,34 @@ export function detectNetwork(url: string): Network {
     if (host.includes('tiktok.com')) return 'tiktok';
     if (host.includes('youtube.com') || host.includes('youtu.be')) return 'youtube';
     if (host.includes('threads.net') || host.includes('threads.com')) return 'threads';
+    if (host === 'x.com' || host === 'twitter.com' || host.endsWith('.x.com') || host.endsWith('.twitter.com')) return 'x';
   } catch {
     // ignore
   }
   return 'instagram';
+}
+
+const NETWORK_HEADS = new Set<Network>([
+  'instagram',
+  'linkedin',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'threads',
+  'x',
+]);
+
+/**
+ * Parse the `rede` column from the sheet. The sheet encodes "Network/Format"
+ * or "Network:Format/Type" (e.g. "Instagram/Carrossel", "Instagram:Feed/Story",
+ * "LinkedIn/Artigo", "X"). Returns the network name, falling back to
+ * detectNetwork(originalUrl) when the value is missing or unrecognized.
+ */
+export function parseRede(rede: string | undefined, originalUrl: string): Network {
+  if (!rede) return detectNetwork(originalUrl);
+  const head = rede.split(/[/:]/)[0].trim().toLowerCase();
+  if (NETWORK_HEADS.has(head as Network)) return head as Network;
+  return detectNetwork(originalUrl);
 }
 
 export function isStoryUrl(url: string): boolean {
@@ -132,8 +156,8 @@ export function parseColumns(
     const title = find(row, 'titulo') ?? '(sem título)';
     const description = find(row, 'descricao');
     const published_at = parseDate(find(row, 'data_publicacao') ?? '');
-    const explicitNetwork = find(row, 'rede') as Network | undefined;
-    const network: Network | undefined = explicitNetwork ?? detectNetwork(original_url);
+    const explicitNetwork = find(row, 'rede');
+    const network: Network = parseRede(explicitNetwork, original_url);
     const cover_url = find(row, 'thumbnail');
     const normalized: NormalizedRow = {
       original_url,

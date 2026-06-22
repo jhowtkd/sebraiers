@@ -50,7 +50,7 @@ export const profileSocialsSchema = z.object({
   threads: handleSchema,
 });
 
-export const networkSchema = z.enum(['instagram', 'linkedin', 'facebook', 'tiktok', 'youtube', 'threads']);
+export const networkSchema = z.enum(['instagram', 'linkedin', 'facebook', 'tiktok', 'youtube', 'threads', 'x']);
 
 export const postSchema = z.object({
   title: z.string().min(3, 'Título muito curto').max(200, 'Título muito longo'),

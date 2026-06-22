@@ -1,4 +1,4 @@
-export type Network = 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube' | 'threads';
+export type Network = 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube' | 'threads' | 'x';
 
 export type CheckinAction = 'like' | 'comment' | 'share';
 
@@ -74,6 +74,7 @@ export const NETWORK_LABELS: Record<Network, string> = {
   tiktok: 'TikTok',
   youtube: 'YouTube',
   threads: 'Threads',
+  x: 'X (Twitter)',
 };
 
 export const ACTION_POINTS: Record<CheckinAction, number> = {
