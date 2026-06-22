@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 import { NETWORK_LABELS, type Post } from '@/lib/types';
 import { PostRowActions } from '@/components/admin/post-row-actions';
+import { SyncButton } from '@/components/admin/sync-button';
 
 export default async function AdminPostsPage() {
   await requireAdmin();
@@ -18,7 +19,10 @@ export default async function AdminPostsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-h1 text-text-primary">Publicações</h1>
-        <Link href="/admin/posts/new"><Button>Nova publicação</Button></Link>
+        <div className="flex items-center gap-2">
+          <SyncButton />
+          <Link href="/admin/posts/new"><Button>Nova publicação</Button></Link>
+        </div>
       </div>
       {(posts ?? []).length === 0 ? (
         <Card><CardBody className="text-center text-text-secondary py-12">Nenhuma publicação cadastrada.</CardBody></Card>
