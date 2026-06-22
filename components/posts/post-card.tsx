@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { ArrowUpRight, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MessageCircle } from 'lucide-react';
 import { ReactionBar } from '@/components/social/reaction-bar';
 import { NetworkIcon } from '@/components/ui/network-icon';
+import { EngageButton } from './engage-button';
 import { NETWORK_LABELS, type Post, type Network } from '@/lib/types';
 import type { PostEngagement } from '@/lib/queries/posts';
 import { cn, formatRelative } from '@/lib/utils';
@@ -84,29 +84,13 @@ export function PostCard({ post, engagement }: Props) {
         </div>
       )}
 
-      {/* ENGAJAR: the action star, in brand Guaco green */}
+      {/* ENGAJAR: the action star, with engaged state */}
       <div className="px-6 pt-2 pb-6">
-        <a
-          href={post.original_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group/cta rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-state-success/40"
-          aria-label={`Engajar no ${networkLabel}`}
-        >
-          <Button
-            size="lg"
-            className="w-full h-14 px-5 text-body-lg font-bold gap-2 rounded-xl bg-state-success hover:bg-state-success-strong text-white border-0"
-          >
-            <span>ENGAJAR</span>
-            <span className="font-normal text-white/80 text-caption hidden sm:inline">
-              no {networkLabel}
-            </span>
-            <ArrowUpRight
-              className="h-5 w-5 ml-auto transition-transform duration-200 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
-              aria-hidden
-            />
-          </Button>
-        </a>
+        <EngageButton
+          postId={post.id}
+          url={post.original_url}
+          networkLabel={networkLabel}
+        />
       </div>
     </article>
   );
