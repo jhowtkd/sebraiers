@@ -1,46 +1,39 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getAdminClient } from '@/lib/supabase/admin';
-import { runSync, type SyncSummary, parseColMap } from '@/lib/sync';
+import { executeSheetSync, verifyCronSecret } from '@/lib/sync/execute-sheet-sync';
 
-export async function POST(request: NextRequest) {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
+async function handleCronSync() {
+  if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   }
-  const provided = request.headers.get('x-cron-secret');
-  if (provided !== expected) {
+
+  const result = await executeSheetSync();
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json(result.summary);
+}
+
+async function authorizeCron(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  return null;
+}
 
-  const sheetId = process.env.SHEET_ID;
-  const gid = process.env.SHEET_GID ?? '0';
-  const colMap = parseColMap(process.env.SHEET_COL_MAP);
-  if (!sheetId) {
-    return NextResponse.json({ error: 'SHEET_ID not configured' }, { status: 500 });
-  }
+/** Cloudflare Cron (POST via worker) and manual triggers. */
+export async function POST(request: NextRequest) {
+  const authError = await authorizeCron(request);
+  if (authError) return authError;
+  return handleCronSync();
+}
 
-  const authorProfileId = process.env.SYNC_AUTHOR_PROFILE_ID;
-  if (!authorProfileId) {
-    return NextResponse.json(
-      { error: 'SYNC_AUTHOR_PROFILE_ID not configured' },
-      { status: 500 }
-    );
-  }
-
-  try {
-    const admin = getAdminClient();
-    const summary: SyncSummary = await runSync({
-      sheetId,
-      gid,
-      colMap,
-      adminId: authorProfileId,
-      client: admin,
-    });
-    return NextResponse.json(summary);
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Unknown error' },
-      { status: 500 }
-    );
-  }
+/** Vercel Cron and HTTP-based schedulers (GET + Authorization header). */
+export async function GET(request: NextRequest) {
+  const authError = await authorizeCron(request);
+  if (authError) return authError;
+  return handleCronSync();
 }

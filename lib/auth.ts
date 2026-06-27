@@ -37,11 +37,9 @@ export async function requireAdmin() {
   return profile;
 }
 
-export function isAdminEmail(email: string | undefined | null): boolean {
+export const AGENCY_ADMIN_EMAIL_DOMAIN = '@conteudoedu.com.br';
+
+export function isAgencyAdminEmail(email: string | undefined | null): boolean {
   if (!email) return false;
-  const list = (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return list.includes(email.toLowerCase());
+  return email.toLowerCase().endsWith(AGENCY_ADMIN_EMAIL_DOMAIN);
 }
