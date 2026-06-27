@@ -51,18 +51,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Admin gate
+  // Admin gate (JWT claim synced from profiles.is_admin via DB trigger)
   if (pathname.startsWith('/admin')) {
-    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
-      .split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-
-    const isAdmin =
-      adminEmails.includes((user.email ?? '').toLowerCase()) ||
-      (user.app_metadata?.is_admin === true);
-
-    if (!isAdmin) {
+    if (user.app_metadata?.is_admin !== true) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/timeline';
       return NextResponse.redirect(redirectUrl);

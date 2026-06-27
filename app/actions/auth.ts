@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { signupSchema, loginSchema } from '@/lib/validation';
-import { isAdminEmail } from '@/lib/auth';
+import { isAgencyAdminEmail } from '@/lib/auth';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -20,7 +20,7 @@ export async function signUpAction(_prev: ActionResult | null, formData: FormDat
   const { full_name, username, email, password } = parsed.data;
 
   const supabase = await createClient();
-  const isAdmin = isAdminEmail(email);
+  const isAdmin = isAgencyAdminEmail(email);
 
   const { error } = await supabase.auth.signUp({
     email, password,
