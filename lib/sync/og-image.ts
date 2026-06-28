@@ -1,7 +1,6 @@
-// Reject well-known wrong-og:image patterns. X/Twitter sets the user's
-// avatar as og:image on status pages instead of the post's first media;
-// we filter those out so the sync doesn't surface a profile picture as a
-// post thumbnail. Extend cautiously.
+import 'server-only';
+
+// Reject well-known wrong-og:image patterns.
 function isValidPostImage(url: string): boolean {
   if (/pbs\.twimg\.com\/profile_images\//.test(url)) return false;
   return true;

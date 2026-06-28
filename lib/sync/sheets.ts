@@ -1,3 +1,4 @@
+import 'server-only';
 import Papa from 'papaparse';
 import type { Network } from '@/lib/types';
 
@@ -30,18 +31,25 @@ export type NormalizedRow = {
   cover_url?: string;
 };
 
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 30000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function fetchSheetCSV(sheetId: string, gid: string): Promise<SheetRow[]> {
   const id = encodeURIComponent(sheetId);
   const g = encodeURIComponent(gid);
   const headers = { 'User-Agent': 'SEBRAEIERS-Sync/1.0' };
   const exportUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${g}`;
-  let res = await fetch(exportUrl, { headers });
+  let res = await fetchWithTimeout(exportUrl, { headers });
   if (!res.ok) {
-    // Fallback: gviz/tq endpoint works for sheets published via "File > Publish to web"
-    // even when /export returns 400. Used as a last-resort so a partially-public sheet
-    // can still be synced.
     const gvizUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${g}`;
-    res = await fetch(gvizUrl, { headers });
+    res = await fetchWithTimeout(gvizUrl, { headers });
     if (!res.ok) throw new Error(`Sheet fetch failed: HTTP ${res.status} (tried /export and /gviz/tq)`);
   }
   const csv = await res.text();

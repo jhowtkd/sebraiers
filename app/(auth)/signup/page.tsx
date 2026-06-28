@@ -2,11 +2,10 @@ import { SignupForm } from '@/components/forms/signup-form';
 import { Card, CardBody } from '@/components/ui/card';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getSession } from '@/lib/auth';
 
 export default async function SignupPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSession();
   if (user) redirect('/timeline');
 
   return (

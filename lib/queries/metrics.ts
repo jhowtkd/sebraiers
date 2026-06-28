@@ -1,6 +1,6 @@
 import 'server-only';
 import { getAdminClient } from '@/lib/supabase/admin';
-import type { CheckinStatus, Network } from '@/lib/types';
+import type { Network } from '@/lib/types';
 
 export interface AdminMetrics {
   totalUsers: number;
@@ -12,39 +12,35 @@ export interface AdminMetrics {
   perNetwork: { network: Network; approved: number; pending: number }[];
 }
 
+type CheckinStatsRpc = {
+  total_approved_checkins: number;
+  total_approved_points: number;
+  per_network: { network: Network; approved: number; pending: number }[];
+};
+
 export async function getAdminMetrics(): Promise<AdminMetrics> {
   const admin = getAdminClient();
-  const [users, posts, pend, appr, top, perNet] = await Promise.all([
+  const [users, posts, pend, stats, top] = await Promise.all([
     admin.from('profiles').select('id', { count: 'exact', head: true }),
     admin.from('posts').select('id', { count: 'exact', head: true }).eq('is_active', true),
     admin.from('checkins').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    admin.from('checkins').select('points').eq('status', 'approved'),
+    admin.rpc('get_admin_checkin_stats'),
     admin.from('user_points').select('user_id, full_name, username, total_points, approved_checkins')
       .order('total_points', { ascending: false }).limit(5),
-    admin.from('checkins').select('status, post:posts(network)'),
   ]);
 
-  const approvedRows = ((appr.data ?? []) as unknown as Array<{ points: number | null }>);
-  const totalApprovedPoints = approvedRows.reduce((sum, r) => sum + (r.points ?? 0), 0);
-  const netMap = new Map<Network, { approved: number; pending: number }>();
-  const perNetRows = ((perNet.data ?? []) as unknown as Array<{ status: CheckinStatus; post: { network: Network | null } | null }>);
-  perNetRows.forEach((r) => {
-    const n = r.post?.network;
-    if (!n) return;
-    if (!netMap.has(n)) netMap.set(n, { approved: 0, pending: 0 });
-    if (r.status === 'approved') netMap.get(n)!.approved += 1;
-    else if (r.status === 'pending') netMap.get(n)!.pending += 1;
-  });
+  if (stats.error) throw stats.error;
 
+  const checkinStats = stats.data as CheckinStatsRpc;
   const topRows = ((top.data ?? []) as unknown as AdminMetrics['top5']);
 
   return {
     totalUsers: users.count ?? 0,
     totalActivePosts: posts.count ?? 0,
     totalPendingCheckins: pend.count ?? 0,
-    totalApprovedCheckins: approvedRows.length,
-    totalApprovedPoints,
+    totalApprovedCheckins: checkinStats.total_approved_checkins,
+    totalApprovedPoints: checkinStats.total_approved_points,
     top5: topRows,
-    perNetwork: Array.from(netMap.entries()).map(([network, v]) => ({ network, ...v })),
+    perNetwork: checkinStats.per_network ?? [],
   };
 }

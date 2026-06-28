@@ -3,7 +3,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { signupSchema, loginSchema } from '@/lib/validation';
-import { isAgencyAdminEmail } from '@/lib/auth';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -20,16 +19,11 @@ export async function signUpAction(_prev: ActionResult | null, formData: FormDat
   const { full_name, username, email, password } = parsed.data;
 
   const supabase = await createClient();
-  const isAdmin = isAgencyAdminEmail(email);
 
   const { error } = await supabase.auth.signUp({
     email, password,
     options: {
-      data: {
-        full_name, username,
-        // Server-side hint; cliente não pode forjar porque vem do server action
-        ...(isAdmin ? { admin_email_hint: email } : {}),
-      },
+      data: { full_name, username },
     },
   });
   if (error) return { ok: false, error: error.message };

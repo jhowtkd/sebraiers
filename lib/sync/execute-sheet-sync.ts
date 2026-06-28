@@ -51,6 +51,13 @@ export async function executeSheetSync(): Promise<SheetSyncResult> {
       adminId: authorProfileId,
       client: admin,
     });
+    if (summary.errors > 0) {
+      return {
+        ok: false,
+        error: `sync completed with ${summary.errors} row error(s)`,
+        status: 500,
+      };
+    }
     return { ok: true, summary };
   } catch (e) {
     return {

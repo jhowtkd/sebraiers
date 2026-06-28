@@ -97,4 +97,14 @@ describe('executeSheetSync', () => {
       expect.objectContaining({ adminId: 'author-uuid', sheetId: 'sheet-1' })
     );
   });
+
+  it('returns error when sync reports row errors', async () => {
+    runSyncMock.mockResolvedValue({ created: 0, updated: 0, skipped_stories: 0, errors: 2, og_images_found: 0 });
+    const result = await executeSheetSync();
+    expect(result).toEqual({
+      ok: false,
+      error: 'sync completed with 2 row error(s)',
+      status: 500,
+    });
+  });
 });

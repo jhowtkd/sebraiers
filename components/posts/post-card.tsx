@@ -1,8 +1,5 @@
-import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
-import { ReactionBar } from '@/components/social/reaction-bar';
 import { NetworkIcon } from '@/components/ui/network-icon';
-import { EngageButton } from './engage-button';
+import { PostCardInteractions } from './post-card-interactions';
 import { NETWORK_LABELS, type Post, type Network } from '@/lib/types';
 import type { PostEngagement } from '@/lib/queries/posts';
 import { cn, formatRelative } from '@/lib/utils';
@@ -64,34 +61,12 @@ export function PostCard({ post, engagement }: Props) {
         </p>
       )}
 
-      {/* REACTIONS: subtle row */}
-      {engagement && (
-        <div className="flex items-center justify-between gap-2 px-6 py-3 border-t border-border-subtle/60">
-          <ReactionBar
-            target="post"
-            targetId={post.id}
-            engagement={engagement}
-            compact
-          />
-          <Link
-            href={`/post/${post.id}#conversa`}
-            className="inline-flex items-center gap-1 text-caption text-text-muted hover:text-brand-azul transition-colors shrink-0"
-            aria-label={`Ver ${engagement.commentCount} comentários`}
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className="tabular-nums">{engagement.commentCount}</span>
-          </Link>
-        </div>
-      )}
-
-      {/* ENGAJAR: the action star, with engaged state */}
-      <div className="px-6 pt-2 pb-6">
-        <EngageButton
-          postId={post.id}
-          url={post.original_url}
-          networkLabel={networkLabel}
-        />
-      </div>
+      <PostCardInteractions
+        postId={post.id}
+        url={post.original_url}
+        networkLabel={networkLabel}
+        engagement={engagement}
+      />
     </article>
   );
 }
