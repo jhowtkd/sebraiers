@@ -1,14 +1,11 @@
 import Link from 'next/link';
 import { Logo } from './logo';
 import { UserMenu } from './user-menu';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthHeaderContext } from '@/lib/auth';
 
 export async function Header() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
-  const isAdmin = profile?.is_admin === true;
+  const ctx = await getAuthHeaderContext();
+  if (!ctx) return null;
 
   return (
     <header className="sticky top-0 z-30 bg-surface-elevated/95 backdrop-blur border-b border-border-subtle">
@@ -19,12 +16,12 @@ export async function Header() {
             <Link href="/timeline" className="px-3 py-1.5 rounded-md hover:bg-surface-sunken text-text-secondary hover:text-text-primary">Timeline</Link>
             <Link href="/ranking" className="px-3 py-1.5 rounded-md hover:bg-surface-sunken text-text-secondary hover:text-text-primary">Ranking</Link>
             <Link href="/meu-desempenho" className="px-3 py-1.5 rounded-md hover:bg-surface-sunken text-text-secondary hover:text-text-primary">Meu desempenho</Link>
-            {isAdmin && (
+            {ctx.isAdmin && (
               <Link href="/admin" className="px-3 py-1.5 rounded-md bg-brand-atlantico text-white hover:bg-brand-atlantico-600">Admin</Link>
             )}
           </nav>
         </div>
-        <UserMenu />
+        <UserMenu user={ctx.user} fullName={ctx.fullName} />
       </div>
     </header>
   );

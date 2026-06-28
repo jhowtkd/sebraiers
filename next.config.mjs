@@ -9,6 +9,7 @@ const nextConfig = {
   },
   experimental: {
     typedRoutes: false,
+    optimizePackageImports: ['lucide-react', '@icons-pack/react-simple-icons'],
   },
 };
 

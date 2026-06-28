@@ -8,9 +8,6 @@ const getUserMock = vi.fn();
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => Promise.resolve({ auth: { signUp: signUpMock, signInWithPassword: signInMock, getUser: getUserMock } }),
 }));
-vi.mock('@/lib/auth', () => ({
-  isAgencyAdminEmail: (e: string) => e.endsWith('@conteudoedu.com.br'),
-}));
 
 import { signUpAction, signInAction } from '@/app/actions/auth';
 
@@ -27,7 +24,7 @@ describe('signUpAction', () => {
     expect(res.ok).toBe(false);
   });
 
-  it('passes admin_email_hint for admin email', async () => {
+  it('does not pass forgeable admin metadata on signup', async () => {
     signUpMock.mockResolvedValue({ error: null });
     const fd = new FormData();
     fd.set('full_name', 'Admin User');
@@ -35,22 +32,16 @@ describe('signUpAction', () => {
     fd.set('email', 'gestor@conteudoedu.com.br');
     fd.set('password', 'supersecret');
     await expect(signUpAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/perfil');
-    expect(signUpMock).toHaveBeenCalledWith(expect.objectContaining({
-      options: expect.objectContaining({
-        data: expect.objectContaining({ admin_email_hint: 'gestor@conteudoedu.com.br' }),
-      }),
-    }));
-  });
-
-  it('omits admin_email_hint for non-admin', async () => {
-    signUpMock.mockResolvedValue({ error: null });
-    const fd = new FormData();
-    fd.set('full_name', 'Regular User');
-    fd.set('username', 'regularuser');
-    fd.set('email', 'user@sebrae.com.br');
-    fd.set('password', 'supersecret');
-    await expect(signUpAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/perfil');
-    expect(signUpMock.mock.calls[0][0].options.data.admin_email_hint).toBeUndefined();
+    expect(signUpMock).toHaveBeenCalledWith({
+      email: 'gestor@conteudoedu.com.br',
+      password: 'supersecret',
+      options: {
+        data: {
+          full_name: 'Admin User',
+          username: 'adminuser',
+        },
+      },
+    });
   });
 
   it('returns supabase error', async () => {

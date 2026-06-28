@@ -1,11 +1,10 @@
 import 'server-only';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
+import { getSession } from '@/lib/auth';
 import { sortRanking, rankPosition, type RankingRow } from '@/lib/ranking';
 
 export async function getRanking(limit = 50): Promise<{ top: RankingRow[]; myPosition: number; me: RankingRow | null }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSession();
   const admin = getAdminClient();
   const { data, error } = await admin
     .from('user_points')
