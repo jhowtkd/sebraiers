@@ -6,33 +6,38 @@ This document describes environment variables, Cloudflare Worker bindings, and c
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` for local development. Next.js loads `.env.local` automatically and never commits it (see `.gitignore`).
+Copy `.env.example` to `.env.local` for local development. Next.js loads `.env.local` automatically and never commits it (see `.gitignore`). Production secrets are configured on the Cloudflare Worker via `wrangler secret put` or the dashboard.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | **Yes** | — | Supabase project URL. Used by browser client, server client, middleware, and admin client. Found in Supabase → Settings → API → Project URL. |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Yes** | — | Supabase project URL. Used by browser client (`lib/supabase/client.ts`), server client (`lib/supabase/server.ts`), middleware (`middleware.ts`), and admin client (`lib/supabase/admin.ts`). Found in Supabase → Settings → API → Project URL. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Yes** | — | Supabase anonymous (public) API key. Safe to expose to the browser. Found in Supabase → Settings → API → Project API keys. |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Yes** (server) | — | Supabase service role key. **Server-only** — used by `getAdminClient()` for privileged operations (sheet sync, admin actions). Never expose to the client. |
-| `ADMIN_EMAILS` | Optional | `""` (empty) | Comma-separated list of emails that receive admin privileges on signup. Checked server-side in `signUpAction` via `isAdminEmail()`; matching emails get `admin_email_hint` in signup metadata. Also used by middleware to gate `/admin` routes. |
-| `NEXT_PUBLIC_APP_URL` | Optional | `http://localhost:3000` (in `.env.example`) | Documented in `.env.example` for deployment reference. Not currently read by application code. |
-| `NEXT_PUBLIC_APP_NAME` | Optional | `SEBRAEIERS` (in `.env.example`) | Documented in `.env.example`. App title is hardcoded in `app/layout.tsx` metadata; this variable is not read by application code. |
-| `SHEET_ID` | **Yes** (sync) | — | Google Spreadsheet ID from the sheet URL (`docs.google.com/spreadsheets/d/{ID}/edit`). Required when running sheet sync (cron or manual). |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Yes** (server) | — | Supabase service role key. **Server-only** — used by `getAdminClient()` in `lib/supabase/admin.ts` for privileged operations (sheet sync, admin actions). Never expose to the client. |
+| `SHEET_ID` | **Yes** (sync) | — | Google Spreadsheet ID from the sheet URL (`docs.google.com/spreadsheets/d/{ID}/edit`). Required for any sheet sync (cron or manual). |
 | `SHEET_GID` | Optional | `0` | Google Sheet tab GID. `0` is the first tab. |
 | `SHEET_COL_MAP` | Optional | Built-in alias map (see [Defaults](#defaults)) | Override column header mapping. Format: `canonical=SheetHeader,canonical=SheetHeader` (comma-separated `key=value` pairs). Parsed by `parseColMap()` in `lib/sync/sheets.ts`. |
-| `CRON_SECRET` | **Yes** (cron sync) | — | Shared secret for `/api/sync`. Accepted via `x-cron-secret` header or `Authorization: Bearer <secret>`. Generate with `openssl rand -hex 32`. |
-| `SYNC_AUTHOR_PROFILE_ID` | **Yes** (automated cron) | — | UUID of the institutional profile used as `created_by` for posts imported by the scheduled cron (no real user session). Create a system user in Supabase Auth and copy the UUID. Not required for manual admin sync via the admin UI (`runSyncAction` uses the logged-in admin's profile). |
+| `CRON_SECRET` | **Yes** (cron sync) | — | Shared secret for `/api/sync`. Accepted via `x-cron-secret` header or `Authorization: Bearer <secret>`. Verified by `verifyCronSecret()` in `lib/sync/execute-sheet-sync.ts`. Generate with `openssl rand -hex 32`. |
+| `NEXT_PUBLIC_APP_URL` | Optional | `http://localhost:3000` (in `.env.example`) | Documented in `.env.example` for deployment reference. Not currently read by application code. |
+| `NEXT_PUBLIC_APP_NAME` | Optional | `SEBRAEIERS` (in `.env.example`) | Documented in `.env.example`. App title is hardcoded in `app/layout.tsx` metadata; this variable is not read by application code. |
 
 ### Supabase
 
 All three Supabase variables are required for the app to function. Without `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, auth middleware and client components cannot connect. Without `SUPABASE_SERVICE_ROLE_KEY`, server-side admin operations and automated sheet sync fail when `getAdminClient()` is called.
 
-### Admin bootstrap
-
-`ADMIN_EMAILS` is optional but recommended for bootstrapping the first admins. When a user signs up with an email in this list, the server action passes `admin_email_hint` to Supabase; a database trigger promotes the profile to admin. You can also add emails to `public.admin_whitelist` in Supabase as a fallback.
-
 ### Google Sheets sync
 
-Sync requires `SHEET_ID` at minimum. Automated sync (Cloudflare cron or `POST/GET /api/sync`) additionally requires `CRON_SECRET` and `SYNC_AUTHOR_PROFILE_ID`. The sheet must be publicly readable (export or publish-to-web) for the sync fetch to succeed.
+Sync requires `SHEET_ID` at minimum. Automated sync (Cloudflare cron `POST /api/sync` or HTTP scheduler `GET /api/sync`) additionally requires `CRON_SECRET`. The sheet must be publicly readable (export or publish-to-web) for the sync fetch in `lib/sync/sheets.ts` to succeed.
+
+The cron author (`created_by` for imported posts) is resolved at runtime by the `get_oldest_agency_admin_profile_id()` SQL function (`supabase/migrations/0009_agency_admin_domain.sql`) — it returns the oldest active admin whose email matches `@conteudoedu.com.br`. No env var is required; the cron handler fails with `500` (`no agency admin found`) if no matching admin exists.
+
+### Admin bootstrap
+
+Admin promotion is handled by the database trigger `handle_new_user` (see `supabase/migrations/0009_agency_admin_domain.sql` and `supabase/migrations/0010_security_sync_hardening.sql`), not by an env var. A user is auto-promoted to `is_admin=true` when any of these are true at signup:
+
+- The email ends with `@conteudoedu.com.br` (function `public.is_agency_admin_email`).
+- The email appears in `public.admin_whitelist`.
+
+The legacy `admin_email_hint` flow was removed in migration `0010_security_sync_hardening.sql` because the client could forge it. If no matching admin exists, `/admin` access must be granted manually via `public.admin_whitelist` or by updating `profiles.is_admin` directly in the database.
 
 ## Config file format
 
@@ -85,11 +90,51 @@ export default defineCloudflareConfig({
 
 ### `next.config.mjs`
 
-Standard Next.js config (React strict mode, image remote patterns for Supabase and Unsplash). Calls `initOpenNextCloudflareForDev()` for local Cloudflare-compatible development.
+Standard Next.js config (React strict mode, image remote patterns for Supabase and Unsplash). No `initOpenNextCloudflareForDev()` call: the file is a plain Next config with no OpenNext dev shim. Local Cloudflare-compatible development is handled by `pnpm preview`, which runs Wrangler against the OpenNext build (see [Local Cloudflare preview](#local-cloudflare-preview-pnpm-preview)). `experimental.typedRoutes` is `false`; `optimizePackageImports` covers `lucide-react` and `@icons-pack/react-simple-icons`.
+
+### `tsconfig.json`
+
+TypeScript compiler options for the app: `target: ES2022`, `strict: true`, `moduleResolution: bundler`, `jsx: preserve`, and the `@/*` path alias mapped to the project root. Plugins include the Next.js type plugin. `next-env.d.ts` and `.next/types/**/*.ts` are included automatically.
+
+### `tailwind.config.ts`
+
+Defines the design tokens consumed by Tailwind classes throughout the app. Notable sections:
+
+- `content` — scans `./app/**`, `./components/**`, `./lib/**` for class names.
+- `theme.extend.colors` — brand palette (`brand-azul`, `brand-atlantico`, `brand-ceu`, …), tier colors (`tier-bronze`, `tier-prata`, `tier-ouro`, `tier-platina`, `tier-diamante`), gamification palette (`begonia`, `manaca`, `jacaranda`, …), semantic state colors (`state-success`, `state-error`, `state-warning`, `state-info`, `state-neutral`), surface colors, text and border tokens. See `docs/brand/02-colors.md` for the canonical brand definitions.
+- `theme.extend.fontFamily` — sans (Figtree, Inter, system fallbacks) and mono (JetBrains Mono, system fallbacks).
+- `theme.extend.fontSize` — display, h1–h4, body, body-lg, body-sm, caption, overline, plus gamification point sizes (`points`, `points-hero`, `rank`).
+- `theme.extend.borderRadius` — `sm`, `md`, `lg`, `xl`, `2xl`.
+- `theme.extend.boxShadow` — `xs`/`sm`/`md`/`lg`/`xl` ramps plus `focus` and `focus-error` rings.
+- `theme.extend.keyframes` and `theme.extend.animation` — `shimmer`, `fade-in`, `slide-up`.
+
+### `postcss.config.mjs`
+
+Standard PostCSS pipeline: `tailwindcss` followed by `autoprefixer`.
+
+### `.eslintrc.json`
+
+Extends `next/core-web-vitals` and `next/typescript`. Run with `pnpm lint`.
+
+### `vitest.config.ts`
+
+Vitest setup: `environment: happy-dom`, `setupFiles: ['./tests/setup.ts']`, `globals: true`. Resolves `@` to the project root and aliases `server-only` to the test mock in `tests/__mocks__/server-only.ts`. `esbuild.jsx: 'automatic'` enables JSX in test files.
 
 ### `public/_headers`
 
-Sets long-lived cache headers for `/_next/static/*` assets when served via Cloudflare static assets.
+Sets long-lived cache headers for `/_next/static/*` assets when served via Cloudflare static assets:
+
+```
+/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable
+```
+
+### `.gitignore` (relevant entries)
+
+- `.env`, `.env*.local`, `.dev.vars*` — secrets never committed; `.env.example` and `.dev.vars.example` are explicitly un-ignored.
+- `.open-next/`, `.wrangler/`, `.next/`, `build/`, `out/` — build artifacts and Wrangler local state.
+- `coverage/` — test coverage output.
+- `supabase/.branches/`, `supabase/.temp/` — Supabase local state.
 
 ## Required vs optional settings
 
@@ -108,22 +153,21 @@ Sets long-lived cache headers for `/_next/static/*` assets when served via Cloud
 | `CRON_SECRET` | `500` — `{ "error": "CRON_SECRET not configured" }` |
 | Invalid/missing auth header | `401` — `{ "error": "Unauthorized" }` |
 | `SHEET_ID` | `500` — `{ "error": "SHEET_ID not configured" }` |
-| `SYNC_AUTHOR_PROFILE_ID` | `500` — `{ "error": "SYNC_AUTHOR_PROFILE_ID not configured" }` (cron path only) |
+| No agency admin (`@conteudoedu.com.br`) in `profiles` | `500` — `{ "error": "no agency admin found" }` |
 
 ### Cloudflare cron (`cloudflare/worker.mjs`)
 
-If `CRON_SECRET` is not set on the Worker environment, the scheduled handler logs `[cron] CRON_SECRET not configured` and exits without syncing.
+If `CRON_SECRET` is not set on the Worker environment, the scheduled handler logs `[cron] CRON_SECRET not configured` and exits without syncing. If the cron schedule in `wrangler.jsonc` and the `SYNC_CRON` constant in `cloudflare/worker.mjs` diverge, the handler silently returns early (`controller.cron !== SYNC_CRON`).
 
 ### Admin routes
 
-If `ADMIN_EMAILS` is empty, `/admin` access depends on `user.app_metadata.is_admin` or the `admin_whitelist` database table — env-based admin gating in middleware will not match any email.
+`/admin` access is gated in `middleware.ts` by `user.app_metadata?.is_admin === true` (synced from `profiles.is_admin` by the `handle_new_user` trigger). Promotion depends on the database rules in [Admin bootstrap](#admin-bootstrap); no env var is consulted.
 
 ## Defaults
 
 | Variable | Default | Where set |
 |----------|---------|-----------|
-| `SHEET_GID` | `0` | `lib/sync/execute-sheet-sync.ts`, `app/actions/sync.ts` |
-| `ADMIN_EMAILS` | `""` (empty list) | `lib/auth.ts`, `middleware.ts` — `process.env.ADMIN_EMAILS ?? ''` |
+| `SHEET_GID` | `0` | `lib/sync/execute-sheet-sync.ts`, `app/actions/sync.ts` — `process.env.SHEET_GID ?? '0'` |
 | `SHEET_COL_MAP` | Built-in alias map | `lib/sync/sheets.ts` — `DEFAULT_COL_MAP` |
 
 When `SHEET_COL_MAP` is unset, `parseColMap()` returns `undefined` and sync uses the built-in aliases:
@@ -147,9 +191,9 @@ SHEET_COL_MAP=link_post=Link,data_publicacao=Data,titulo=Título da Publicação
 
 ### Local development (Next.js)
 
-1. Copy `.env.example` → `.env.local`
-2. Fill in Supabase keys and `ADMIN_EMAILS`
-3. Run `pnpm dev` — Next.js loads `.env.local` automatically
+1. Copy `.env.example` → `.env.local`.
+2. Fill in Supabase keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) and `SHEET_ID`/`CRON_SECRET` if you intend to test sync.
+3. Run `pnpm dev` — Next.js loads `.env.local` automatically.
 
 For sync testing locally:
 
@@ -158,31 +202,29 @@ curl -X POST http://localhost:3000/api/sync \
   -H "x-cron-secret: $CRON_SECRET"
 ```
 
+The same route accepts `GET` with `Authorization: Bearer $CRON_SECRET` for HTTP-based schedulers.
+
 ### Local Cloudflare preview (`pnpm preview`)
 
-Uses Wrangler with the OpenNext build. Environment variables for the Worker can be provided via `.dev.vars` (gitignored; no `.dev.vars.example` is committed). Same variable names as `.env.example` apply.
+Uses Wrangler with the OpenNext build. Environment variables for the Worker can be provided via `.dev.vars` (gitignored; no `.dev.vars.example` is committed — the `.gitignore` allows one with `!.dev.vars.example`). Same variable names as `.env.example` apply.
 
 ### Production (Cloudflare Workers)
 
 Deploy with `pnpm deploy` (runs `opennextjs-cloudflare build` then `opennextjs-cloudflare deploy`).
 
-Set secrets on the Worker via the Cloudflare dashboard or CLI:
+Set secrets on the Worker via Wrangler:
 
 ```bash
 wrangler secret put CRON_SECRET
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 wrangler secret put NEXT_PUBLIC_SUPABASE_URL
 wrangler secret put NEXT_PUBLIC_SUPABASE_ANON_KEY
-# ... repeat for SHEET_ID, SYNC_AUTHOR_PROFILE_ID, ADMIN_EMAILS, etc.
+wrangler secret put SHEET_ID
 ```
 
-`NEXT_PUBLIC_*` variables must be available at build time for client bundles and at runtime on the Worker. Configure them in Cloudflare according to your OpenNext deploy workflow.
+`NEXT_PUBLIC_*` variables must be available at build time for client bundles and at runtime on the Worker. Configure them through your OpenNext deploy workflow or as plaintext (non-secret) vars in `wrangler.jsonc` if preferred.
 
-The scheduled cron (`0 */6 * * *`) is defined in both `wrangler.jsonc` and `cloudflare/worker.mjs` (`SYNC_CRON` constant — must stay in sync). The worker POSTs to `/api/sync` with the `x-cron-secret` header.
-
-### Vercel (alternative)
-
-The `/api/sync` route also supports `GET` with `Authorization: Bearer <CRON_SECRET>` for HTTP-based schedulers such as Vercel Cron. <!-- VERIFY: whether production is deployed on Vercel or Cloudflare only -->
+The scheduled cron (`0 */6 * * *`) is defined in both `wrangler.jsonc` (`triggers.crons`) and `cloudflare/worker.mjs` (`SYNC_CRON` constant — must stay in sync). The worker POSTs to `/api/sync` with the `x-cron-secret` header against the self-reference binding `WORKER_SELF_REFERENCE`.
 
 ### Supabase local
 

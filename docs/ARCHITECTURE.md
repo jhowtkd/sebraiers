@@ -2,176 +2,147 @@
 
 # Architecture
 
-## System overview
+## System Overview
 
-SEBRAEIERS is a gamified internal engagement platform for SEBRAE Goiás employees. Collaborators browse official social posts, declare engagement actions (like, comment, share), earn points after admin approval, and compete on a leaderboard. The application is a **Next.js 15 App Router** monolith with **server components** for reads, **server actions** for mutations, and **Supabase** (Postgres, Auth, Storage, RLS) as the data and identity backend. A **Google Sheets sync pipeline** imports posts from a spreadsheet into the database, triggered manually by admins or on a schedule via **Cloudflare Workers** cron. Production runs on **Cloudflare Workers** through `@opennextjs/cloudflare`, with R2-backed incremental caching.
+SEBRAEIERS is an internal gamification platform for SEBRAE Goiás employees, built to drive engagement with the institution's official social media accounts. Authenticated users browse a curated timeline of published posts across seven networks (Instagram, LinkedIn, Facebook, TikTok, YouTube, Threads, X), declare that they have liked / commented on / shared a given post, and earn points that feed a public ranking. Administrators curate the content, moderate declared check-ins, and manage the user base.
 
-Primary inputs: user credentials, engagement declarations, admin moderation decisions, and Google Sheets CSV rows. Primary outputs: timeline/ranking UI, admin dashboards, and persisted posts, check-ins, reactions, and comments.
+The application is a single-tenant Next.js 15 App Router project deployed to Cloudflare Workers via `@opennextjs/cloudflare`. Supabase provides the entire data plane (Postgres for state, Auth for identity, Storage for post covers, Realtime optional). A scheduled cron worker calls an internal HTTP endpoint every six hours to ingest posts from a Google Sheets source-of-truth, ensuring the timeline stays in sync with what the marketing team publishes externally.
 
-## Component diagram
+## Component Diagram
 
 ```mermaid
 graph TD
-  subgraph edge["Edge / Runtime"]
-    MW[middleware.ts]
-    CF[cloudflare/worker.mjs]
-  end
+  Browser[Browser] --> MW[middleware.ts<br/>auth + admin gate]
+  MW -->|public| Auth[app/(auth)/login · signup]
+  MW -->|private| App[app/(app)/timeline · post · ranking · meu-desempenho]
+  MW -->|admin| Admin[app/(admin)/admin/*]
+  MW -->|/api/sync| APIRoute[app/api/sync/route.ts<br/>CRON_SECRET check]
 
-  subgraph app["Next.js App Router"]
-    Pages["app/(app)/* pages"]
-    Admin["app/(admin)/* pages"]
-    Auth["app/(auth)/* pages"]
-    Actions["app/actions/*"]
-    API["app/api/sync"]
-  end
+  App --> SA[app/actions/*<br/>server actions]
+  Admin --> SA
+  SA --> SC[lib/supabase/server.ts<br/>anon client + cookies]
+  SA --> AC[lib/supabase/admin.ts<br/>service_role client]
+  SA --> Val[lib/validation.ts<br/>Zod schemas]
 
-  subgraph lib["lib/"]
-    AuthLib[lib/auth.ts]
-    Queries[lib/queries/*]
-  end
+  App --> Q[lib/queries/*<br/>RSC data fetch]
+  Q --> SC
+  Q --> AC
 
-  subgraph supabase["Supabase clients"]
-    Srv[lib/supabase/server.ts]
-    Cli[lib/supabase/client.ts]
-    Adm[lib/supabase/admin.ts]
-  end
+  Admin --> MetricsQ[lib/queries/metrics.ts]
+  MetricsQ --> RPC[(Supabase RPC<br/>get_admin_checkin_stats)]
+  Q --> View[(user_points view)]
 
-  subgraph sync["lib/sync/"]
-    RunSync[runSync]
-    Sheets[sheets.ts]
-    OG[og-image.ts]
-    Exec[execute-sheet-sync.ts]
-  end
+  APIRoute --> Exec[lib/sync/execute-sheet-sync.ts]
+  Exec --> AC
+  Exec --> Runner[lib/sync/index.ts<br/>runSync]
+  Runner --> Sheets[lib/sync/sheets.ts]
+  Runner --> OG[lib/sync/og-image.ts]
 
-  DB[(Supabase Postgres + Auth + Storage)]
-  SheetsExt[Google Sheets CSV]
-
-  CF -->|scheduled POST| API
-  MW -->|session refresh + gates| Pages
-  MW --> Admin
-  MW --> Auth
-
-  Pages --> Queries
-  Admin --> Queries
-  Admin --> Actions
-  Pages --> Actions
-  Auth --> Actions
-
-  Actions --> Srv
-  Actions --> Adm
-  Queries --> Srv
-  Queries --> Adm
-  AuthLib --> Srv
-
-  API --> Exec
-  Exec --> RunSync
-  RunSync --> Sheets
-  RunSync --> OG
-  RunSync --> Adm
-
-  Srv --> DB
-  Adm --> DB
-  Cli --> DB
-  Sheets --> SheetsExt
+  Cron[Cloudflare Cron<br/>0 */6 * * *] --> Worker[cloudflare/worker.mjs]
+  Worker --> APIRoute
+  SyncBtn[components/admin/sync-button.tsx] -->|manual trigger| SA
+  SA --> Runner
 ```
 
-## Data flow
+**Relationships**
 
-### Authentication and route protection
+- Browser ↔ Next.js App Router (RSC + Server Actions, no client data fetching for primary flows)
+- middleware.ts gates every non-public route on the `is_admin` claim synced from `auth.users.raw_app_meta_data`
+- Server actions in `app/actions/*` are the single mutating surface; they validate with Zod (`lib/validation.ts`) before touching the DB
+- The Cloudflare Worker (`cloudflare/worker.mjs`) is a thin wrapper around the OpenNext export that also schedules a cron calling `/api/sync`
+- Storage bucket `post-covers` is exposed to authenticated reads and admin-only writes via RLS
 
-1. Every matched request passes through `middleware.ts`, which refreshes the Supabase session via cookie-based `createServerClient` from `@supabase/ssr`.
-2. Public paths (`/`, `/login`, `/signup`, `/auth/*`, `/api/sync`, static assets) skip the auth gate.
-3. Unauthenticated users on protected routes are redirected to `/login?next=<path>`.
-4. `/admin/*` routes additionally require the user email to appear in `ADMIN_EMAILS` or `user.app_metadata.is_admin === true` in middleware; server layouts call `requireAdmin()` which checks `profiles.is_admin` in the database.
+## Data Flow
 
-### Sign-up and profile bootstrap
+### 1. Authenticated request — read a timeline post
 
-1. `signUpAction` (`app/actions/auth.ts`) validates input with Zod, calls `supabase.auth.signUp`, and redirects to `/perfil`.
-2. A Postgres trigger (`handle_new_user` in `supabase/migrations/0001_init.sql`) creates a `profiles` row and `user_socials` row on `auth.users` insert, promoting admins when `admin_email_hint` metadata matches or the email is in `admin_whitelist`.
-3. Onboarding at `app/(onboarding)/perfil` uses `updateSocialsAction` to upsert social handles into `user_socials`.
+1. Browser navigates to `/timeline`.
+2. `middleware.ts` resolves the Supabase session cookie, populates the response, and gates `/admin` on `user.app_metadata.is_admin === true`.
+3. The Server Component `app/(app)/timeline/page.tsx` awaits `getTimeline()` from `lib/queries/posts.ts`.
+4. `getTimeline()` calls `lib/supabase/server.ts`, which builds a cookie-bound Supabase server client using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+5. Supabase enforces RLS: any authenticated user reads `posts` where `is_active = true`; the join to `profiles` works because `profiles_select_all_authenticated` allows broad read.
+6. The list is enriched server-side with `getPostsEngagementBatch()` (reactions + comment counts in a single batched IN-query).
+7. Each `PostCard` is a server-rendered component; engagement controls hydrate through one client boundary (`PostCardInteractions`) that calls `ReactionBar` and renders the `EngageButton`.
 
-### Timeline and engagement reads
+### 2. Declare a check-in
 
-1. Authenticated app pages under `app/(app)/` call `requireUser()` then `lib/queries/*` functions.
-2. `getTimeline` fetches active `posts` with author profile joins, filtered by network and search.
-3. `getPostsEngagementBatch` loads reaction counts, the current user's reactions, and comment counts from `post_reactions` and `post_comments`.
-4. Server components render `components/posts/*` and `components/social/*` with this data; no client-side data fetching layer (no React Query/SWR).
+1. User clicks *Curti / Comentei / Compartilhei* on the post detail page.
+2. Client component `components/posts/checkin-buttons.tsx` invokes the server action `declareCheckinAction` from `app/actions/checkins.ts`.
+3. The action parses `checkinDeclareSchema` (Zod), inserts into `public.checkins` with status `pending`, and triggers the DB-side `set_checkin_points()` trigger that computes `points` from the action type.
+4. RLS policy `checkins_insert_self_pending` ensures the row references `auth.uid()` and a post that is still active.
+5. `revalidatePath()` invalidates the post detail page and `meu-desempenho`.
+6. An admin later approves it via `decideCheckinAction`, which calls the `decide_checkin` RPC for atomicity.
 
-### Check-in (points) workflow
+### 3. Approve / reject a check-in (admin only)
 
-1. User clicks an engage action on a post → `declareCheckinAction` inserts a `checkins` row with `status: 'pending'` and points derived from action type (1/2/3 for like/comment/share).
-2. A unique constraint on `(user_id, post_id, action)` prevents duplicate declarations.
-3. Admin reviews pending check-ins at `/admin/checkins` → `decideCheckinAction` calls the `decide_checkin` RPC (`supabase/migrations/0003_decide_checkin_rpc.sql`), which atomically updates status, records `checkin_approvals`, and sets points.
-4. The `user_points` view aggregates approved check-ins for ranking; `getRanking` reads it via the service-role client to bypass RLS for the public leaderboard.
+1. `decideCheckinAction` calls the SQL function `public.decide_checkin(p_checkin_id, p_decision, p_admin_id, p_note)`.
+2. Migration `0010_security_sync_hardening.sql` made the RPC bind `p_admin_id := auth.uid()`, rejecting any caller impersonation.
+3. The RPC: verifies caller is admin, transitions the checkin from `pending` to `approved|rejected`, inserts an audit row into `checkin_approvals`, and returns the updated checkin.
+4. Re-decision is impossible because the `update … where status = 'pending'` clause short-circuits and the function raises `P0002`.
 
-### Social reactions and comments
+### 4. Sheet sync (manual or cron)
 
-1. `app/actions/social.ts` handles post reactions (toggle), post comments, and check-in reactions/comments.
-2. All mutations validate with Zod schemas from `lib/validation.ts`, use the cookie-scoped server Supabase client (subject to RLS), and call `revalidatePath` for affected routes.
+1. **Manual path (admin)**: `SyncButton` calls `runSyncAction` (server action); `app/actions/sync.ts` re-checks admin status, parses `SHEET_ID`/`SHEET_GID`/`SHEET_COL_MAP`, and calls `runSync()`.
+2. **Cron path**: Cloudflare Worker `cloudflare/worker.mjs` receives the scheduled trigger, picks up `CRON_SECRET` from env, and `fetch`-es its own `https://sebraiers.internal/api/sync` endpoint using the `WORKER_SELF_REFERENCE` service binding.
+3. `app/api/sync/route.ts` accepts both POST and GET; both validate the secret via `verifyCronSecret()` (header `x-cron-secret` or `Authorization: Bearer …`) and delegate to `executeSheetSync()`.
+4. `executeSheetSync()` uses the service-role client to call `get_oldest_agency_admin_profile_id()` (so synced posts have a valid `created_by` regardless of which admin's account is currently active).
+5. `runSync()` in `lib/sync/index.ts` orchestrates: fetch sheet CSV (tries `/export` then `/gviz/tq` as fallback) → parse columns → hash URL to produce `external_id` → skip stories → load existing posts → resolve missing covers via `fetchOgImage` (8-way concurrency) → upsert in chunks of 50.
+6. Result summary (`created`, `updated`, `skipped_stories`, `errors`, `og_images_found`) is returned to the API as JSON and to the manual button as a toast.
 
-### Admin post management
+### 5. Ranking computation
 
-1. Admins create/edit posts via `app/actions/posts.ts`, optionally uploading cover images to Supabase Storage (`post-covers` bucket) through `getAdminClient()`.
-2. `getAdminMetrics` (`lib/queries/metrics.ts`) aggregates counts and top performers using the service-role client.
+- Single source of truth: the SQL view `public.user_points`, aggregated from approved check-ins and joined with profile metadata.
+- `lib/queries/ranking.ts` reads `user_points` via the service-role client and applies `sortRanking()` (deterministic tie-breaker by `last_approved_at` then `username`).
 
-### Google Sheets sync
+## Key Abstractions
 
-1. **Scheduled (production):** Cloudflare cron (`0 */6 * * *` in `wrangler.jsonc`) runs `cloudflare/worker.mjs` `scheduled` handler, which POSTs to `/api/sync` with `x-cron-secret`.
-2. **HTTP trigger:** `app/api/sync/route.ts` accepts GET or POST with `x-cron-secret` or `Authorization: Bearer <CRON_SECRET>`.
-3. **Manual (admin UI):** `runSyncAction` in `app/actions/sync.ts` calls the same `runSync` core after verifying `profiles.is_admin`.
-4. `runSync` (`lib/sync/index.ts`): fetches CSV from Google Sheets (`lib/sync/sheets.ts`), normalizes rows, skips story URLs, hashes `original_url` as `external_id`, optionally fetches OG images (`lib/sync/og-image.ts`), then upserts into `posts` via the admin client with `SYNC_AUTHOR_PROFILE_ID` as `created_by`.
+| Concept | File | Purpose |
+| --- | --- | --- |
+| `Network` union | `lib/types.ts` | `'instagram' \| 'linkedin' \| 'facebook' \| 'tiktok' \| 'youtube' \| 'threads' \| 'x'` |
+| `CheckinAction` union | `lib/types.ts` | `'like' \| 'comment' \| 'share'` mapping to `ACTION_POINTS = { 1, 2, 3 }` |
+| `ACTION_LABELS` | `lib/types.ts` | PT-BR display strings; centralized for UI consistency |
+| `Profile`, `Post`, `Checkin`, `UserPoint` | `lib/types.ts` | Shared DTOs between RSC, queries, and Server Components |
+| `sortRanking` / `rankPosition` | `lib/ranking.ts` | Deterministic ordering by points, then recency, then username |
+| `getSession`, `getCurrentProfile`, `requireUser`, `requireAdmin` | `lib/auth.ts` | RSC-safe, `cache()`-wrapped auth fetchers and gates |
+| `AGENCY_ADMIN_EMAIL_DOMAIN = '@conteudoedu.com.br'` | `lib/auth.ts` | Auto-admin promotion rule mirrored from the DB trigger |
+| Zod schemas | `lib/validation.ts` | All Server Action entry points parse input here (signup, login, post CRUD, check-in declare/decide, reactions, comments) |
+| Supabase server / admin / browser clients | `lib/supabase/{server,admin,client}.ts` | Two server-safe clients (cookie anon, service_role) + one browser client |
+| `cn`, `formatRelative`, `formatPoints`, `initials` | `lib/utils.ts` | Shared tailwind + i18n formatting helpers |
+| `runSync` / `executeSheetSync` / `verifyCronSecret` | `lib/sync/*` | Orchestration of Google Sheets ingestion and cron auth |
+| `mapWithConcurrency` / `chunkArray` | `lib/sync/concurrency.ts` | Bounded fan-out and batch utilities used by sync |
+| `fetchOgImage` | `lib/sync/og-image.ts` | 5s-timeout `og:image` extractor with Twitter profile-image guard |
+| `getTimeline`, `getPostEngagement`, `getMyCheckins*` | `lib/queries/posts.ts` · `lib/queries/checkins.ts` | RSC data fetchers with batched IN-query engagement prefetch |
+| `getAdminMetrics` | `lib/queries/metrics.ts` | Aggregates via `get_admin_checkin_stats` RPC (one round-trip for totals + per-network breakdown) |
 
-## Key abstractions
+## Directory Layout Rationale
 
-| Abstraction | Location | Role |
-|-------------|----------|------|
-| `Profile`, `Post`, `Checkin`, `UserPoint` | `lib/types.ts` | Domain types and point/action constants |
-| Zod schemas (`postSchema`, `checkinDeclareSchema`, etc.) | `lib/validation.ts` | Input validation at server-action boundaries |
-| `createClient()` | `lib/supabase/server.ts` | Cookie-scoped Supabase client for RLS-enforced reads/writes |
-| `getAdminClient()` | `lib/supabase/admin.ts` | Service-role client for sync, storage uploads, ranking, and admin metrics |
-| `getClient()` | `lib/supabase/client.ts` | Browser Supabase client (singleton) |
-| `requireUser()`, `requireAdmin()`, `getCurrentProfile()` | `lib/auth.ts` | Server-side auth guards for pages and actions |
-| `getTimeline`, `getPostEngagement`, `getPostsEngagementBatch` | `lib/queries/posts.ts` | Post feed and engagement aggregation |
-| `getRanking` | `lib/queries/ranking.ts` | Leaderboard from `user_points` view |
-| `getAdminMetrics` | `lib/queries/metrics.ts` | Admin dashboard aggregates |
-| `sortRanking`, `rankPosition` | `lib/ranking.ts` | Tie-break ordering for leaderboard display |
-| `runSync`, `SyncSummary` | `lib/sync/index.ts` | Sheet-to-database post import orchestration |
-| `fetchSheetCSV`, `parseColumns`, `detectNetwork` | `lib/sync/sheets.ts` | CSV fetch, column mapping, network detection |
-| `executeSheetSync`, `verifyCronSecret` | `lib/sync/execute-sheet-sync.ts` | Cron-safe sync entry point for API route |
-| `ActionResult` | `app/actions/auth.ts` | Standard `{ ok: true } \| { ok: false; error }` mutation result |
-| `decide_checkin` RPC | `supabase/migrations/0003_decide_checkin_rpc.sql` | Atomic check-in approval/rejection with audit trail |
+| Directory | Purpose |
+| --- | --- |
+| `app/` | App Router routes grouped by route groups: `(auth)` for public auth pages, `(onboarding)` for `/perfil`, `(app)` for authenticated user pages, `(admin)` for the gated admin area. `app/actions/` holds server-only mutations; `app/api/sync/` is the only App Router API route. |
+| `lib/supabase/` | Three Supabase clients isolated by execution context (browser, server with cookies, server with service_role). The admin client enforces `autoRefreshToken: false, persistSession: false` since it must not interfere with the user's own session. |
+| `lib/queries/` | RSC data fetchers (`'server-only'`). Encapsulate all read queries so each page calls one named function instead of inlining Supabase calls. |
+| `lib/sync/` | The Sheets-to-posts ingestion pipeline, broken into composable pieces (sheets parser, OG fetcher, concurrency utilities, executor). Marked `'server-only'` because it imports `server-only`. |
+| `components/` | View components grouped by feature (admin, forms, layout, posts, ranking, social) plus a `ui/` folder of primitives (Button, Card, Toast, Skeleton, etc.). Single client boundary per interactive region — e.g. `PostCardInteractions` isolates hydration to engagement controls. |
+| `supabase/migrations/` | Numbered, ordered SQL migrations: schema and RLS bootstrap (`0001`), security hardening (`0002`, `0010`), atomic RPCs (`0003`, `0011`), engagement tables (`0005`), admin-read RLS adjustments (`0006`), external_id for sync (`0007`), `x` network enum extension (`0008`), agency-domain admin auto-promotion (`0009`). |
+| `tests/` | Vitest suites grouped by target: `lib/{actions,auth,ranking,sync,utils}`, `components/`, plus `setup.ts` (mocks `react.cache` so RSC callers don't double-fetch in tests). |
+| `cloudflare/worker.mjs` | The Cloudflare Worker entrypoint — imports the OpenNext build output and adds a `scheduled` handler that calls `/api/sync` via the `WORKER_SELF_REFERENCE` service binding. |
+| `wrangler.jsonc` | Worker config: `nodejs_compat`, `ASSETS` directory (`.open-next/assets`), `NEXT_INC_CACHE_R2_BUCKET` named `sebraiers-opennext-cache`, `IMAGES` binding, cron `["0 */6 * * *"]`, observability enabled. |
+| `open-next.config.ts` | OpenNext adapter config — installs the R2 incremental cache override. |
+| `docs/` | Project docs; the design system lives under `docs/brand/`, historical artifacts under `docs/superpowers/`. |
 
-## Directory structure rationale
+## Security Boundaries
 
-```
-Sebraiers/
-├── app/                    # Next.js App Router — routes, layouts, API, server actions
-│   ├── (app)/              # Authenticated user routes (timeline, ranking, post detail)
-│   ├── (admin)/            # Admin-only routes; layout calls requireAdmin()
-│   ├── (auth)/             # Login and signup (public)
-│   ├── (onboarding)/       # Profile setup after first sign-up
-│   ├── actions/            # Server actions grouped by domain (auth, posts, checkins, social, sync, users)
-│   └── api/sync/           # Cron/manual HTTP endpoint for sheet sync
-├── components/             # React UI by feature (admin, forms, layout, posts, ranking, social, ui)
-├── lib/                    # Server-safe business logic, queries, validation, Supabase clients
-│   ├── queries/            # Read models for pages (posts, checkins, ranking, metrics)
-│   ├── supabase/           # Three Supabase client factories (server, browser, admin)
-│   ├── sync/               # Google Sheets import pipeline
-│   └── social/             # Reaction emoji constants
-├── supabase/               # Database migrations, seed data, local Supabase config
-├── cloudflare/             # Worker entry that wraps OpenNext and adds cron trigger
-├── tests/                  # Vitest unit and component tests
-├── docs/                   # Project documentation (this file, brand guidelines)
-├── middleware.ts           # Global auth session refresh and admin route gate
-├── wrangler.jsonc          # Cloudflare Workers deploy config (R2 cache, cron, bindings)
-├── open-next.config.ts     # OpenNext Cloudflare adapter (R2 incremental cache)
-└── next.config.mjs         # Next.js config with OpenNext dev integration
-```
+- **Edge layer**: `middleware.ts` redirects unauthenticated traffic to `/login` and admin paths to `/timeline` when `app_metadata.is_admin !== true`.
+- **Database layer**: All public tables are RLS-enabled with policies that resolve `is_admin` against `profiles`. Storage bucket `post-covers` is public-readable but admin-only for write.
+- **Trigger layer**: `protect_admin_fields` rejects self-update of `is_admin`/`is_active`; `prevent_last_admin_demote` blocks losing the last active admin; `sync_admin_jwt_claim` keeps the JWT `is_admin` claim aligned with the `profiles` row so the middleware check stays honest.
+- **RPC layer**: `decide_checkin` rejects `p_admin_id <> auth.uid()`; `get_oldest_agency_admin_profile_id` is granted only to `service_role` so the sync worker can assign an author without a session.
+- **Cron layer**: `/api/sync` (and the Sheets sync action via `runSyncAction`) check `CRON_SECRET`; the Worker reads it from `env.CRON_SECRET` and forwards it as `x-cron-secret`.
 
-**Why route groups?** Parentheses in `app/(app)`, `app/(admin)`, etc. organize layouts without affecting URLs. Each group applies different auth requirements: `(auth)` is public, `(app)` requires login, `(admin)` requires admin profile.
+## Deployment Topology
 
-**Why split `lib/queries` from `app/actions`?** Queries are read-only, `server-only` data accessors used by server components. Actions are mutations invoked from client components via form actions or `useTransition`, keeping a clear read/write boundary.
+- **Build**: `next build` (Next.js) followed by `opennextjs-cloudflare build` which produces the OpenNext Worker bundle in `.open-next/`.
+- **Hosting**: Cloudflare Workers — Node.js compatibility enabled, static assets served from the `ASSETS` binding, incremental cache backed by R2 (`sebraiers-opennext-cache`), image transformations via the `IMAGES` binding.
+- **Database**: Supabase (managed Postgres 17) with RLS as the canonical access guard. Local dev uses the Supabase CLI against Docker (`pnpm dlx supabase start`).
+- **Scheduled jobs**: Cloudflare Cron (`0 */6 * * *`) → Worker `scheduled` handler → internal `fetch` to `/api/sync`. Manual override via the admin `SyncButton` or a `curl -X POST … -H "x-cron-secret: …"` against `/api/sync`.
 
-**Why three Supabase clients?** The server client respects RLS with the user's session. The admin client bypasses RLS for operations that lack a user context (cron sync) or need elevated access (ranking view, storage uploads, aggregate metrics). The browser client supports any client-side Supabase needs.
-
-**Why `lib/sync` is separate?** Sheet import is a distinct integration with its own parsing, OG scraping, and idempotency (`external_id` hash), shared by the API route, cron worker, and admin manual trigger.
+<!-- VERIFY: production Worker URL and exact Cloudflare account/project name -->

@@ -12,7 +12,7 @@ This document describes how SEBRAEIERS is built, deployed, and operated in produ
 | **Supabase** (external) | `supabase/` migrations | Postgres, Auth, Storage, and RLS — hosted separately; not deployed by this repo's scripts |
 | **R2** (Cloudflare) | `wrangler.jsonc` → `r2_buckets` | Bucket `sebraiers-opennext-cache` for Next.js incremental cache (`NEXT_INC_CACHE_R2_BUCKET`) |
 
-No `Dockerfile`, `vercel.json`, `netlify.toml`, or other platform config files are present in the repository. The `/api/sync` route also supports `GET` with `Authorization: Bearer <CRON_SECRET>` for HTTP-based schedulers, but production cron is implemented via Cloudflare Workers triggers.
+No `Dockerfile`, `vercel.json`, `netlify.toml`, `fly.toml`, `railway.json`, or `serverless.yml` are present in the repository. The `/api/sync` route also supports `GET` with `Authorization: Bearer <CRON_SECRET>` for HTTP-based schedulers, but production cron is implemented via Cloudflare Workers triggers.
 
 ### Cloudflare Worker architecture
 
@@ -25,16 +25,16 @@ Key bindings from `wrangler.jsonc`:
 
 | Binding | Type | Purpose |
 |---------|------|---------|
-| `ASSETS` | Static assets | Serves `.open-next/assets` (includes `public/_headers` cache rules) |
-| `WORKER_SELF_REFERENCE` | Service | Self-reference so cron can call `/api/sync` internally |
+| `ASSETS` | Static assets | Serves `.open-next/assets` (uses `public/_headers` cache rules for `/_next/static/*`) |
+| `WORKER_SELF_REFERENCE` | Service | Self-reference so the cron handler can call `/api/sync` internally |
 | `NEXT_INC_CACHE_R2_BUCKET` | R2 | Incremental cache for ISR/revalidation (`open-next.config.ts`) |
 | `IMAGES` | Images | Cloudflare Images binding for Next.js image optimization |
 
-Worker name: `sebraiers`. Compatibility date: `2026-06-22` with `nodejs_compat` flag.
+Worker name: `sebraiers`. Compatibility date: `2026-06-22` with the `nodejs_compat` flag. Observability is enabled.
 
 ## Build pipeline
 
-No CI/CD pipeline is configured in this repository (no `.github/workflows/` deploy workflows detected).
+No CI/CD pipeline is configured in this repository (no `.github/workflows/` deploy workflows detected). Deploys are run manually from a developer machine or an admin workstation.
 
 ### Manual deploy (production)
 
@@ -50,7 +50,7 @@ pnpm deploy
 1. `opennextjs-cloudflare build` — builds Next.js (`next build`) and packages the app for Cloudflare Workers into `.open-next/`.
 2. `opennextjs-cloudflare deploy` — deploys the Worker and assets to Cloudflare using `wrangler.jsonc`.
 
-### Other npm scripts
+### Other deploy scripts
 
 | Command | Description |
 |---------|-------------|
@@ -64,7 +64,7 @@ pnpm deploy
 1. **R2 bucket** — Create `sebraiers-opennext-cache` in your Cloudflare account before the first deploy. <!-- VERIFY: R2 bucket region and dashboard creation steps -->
 2. **Worker secrets** — Set all required environment variables (see [Environment setup](#environment-setup)).
 3. **Supabase** — Apply migrations (`supabase db push` or dashboard) and configure Auth redirect URLs for the production domain. <!-- VERIFY: production Supabase project URL and redirect URLs -->
-4. **Cron constant sync** — If you change the cron schedule in `wrangler.jsonc`, update `SYNC_CRON` in `cloudflare/worker.mjs` to match exactly.
+4. **Cron constant sync** — If you change the cron schedule in `wrangler.jsonc`, update the `SYNC_CRON` constant in `cloudflare/worker.mjs` to match exactly. The two values must agree or the cron handler will silently skip.
 
 ## Environment setup
 
@@ -90,7 +90,7 @@ For the full variable reference (names, defaults, validation errors), see [CONFI
 
 | Variable | Notes |
 |----------|-------|
-| `ADMIN_EMAILS` | Comma-separated admin bootstrap emails |
+| `ADMIN_EMAILS` | Comma-separated admin bootstrap emails (deprecated in favor of DB-driven `admin_whitelist` — see CONFIGURATION.md) |
 | `SHEET_GID` | Defaults to `0` |
 | `SHEET_COL_MAP` | Custom column header mapping |
 | `NEXT_PUBLIC_APP_URL` | Documented in `.env.example`; not read by app code today |
@@ -122,7 +122,7 @@ No automated rollback is defined in the repository. Use one of these approaches:
 
 1. Open the Cloudflare dashboard → **Workers & Pages** → worker `sebraiers`.
 2. Go to **Deployments** (or **Versions**).
-3. Select a previous successful deployment and **Rollback** or redeploy that version.
+3. Select a previous successful deployment and **Rollback** or redeploy that version. <!-- VERIFY: Cloudflare account dashboard URL -->
 
 ### Wrangler CLI
 
@@ -164,6 +164,7 @@ The cron handler in `cloudflare/worker.mjs` writes structured messages to Worker
 - `[cron] CRON_SECRET not configured` — secret missing on the Worker environment
 - `[cron] Sync failed (<status>): <body>` — `/api/sync` returned a non-OK response
 - `[cron] Sync completed: <body>` — successful sync with JSON summary
+- `[cron] Sync request failed: <error>` — network/exception when calling `/api/sync`
 
 ### External services
 
@@ -171,10 +172,11 @@ The cron handler in `cloudflare/worker.mjs` writes structured messages to Worker
 |---------|-----------------|
 | **Supabase** | Database health, Auth errors, Storage usage, RLS policy failures — via Supabase dashboard |
 | **Google Sheets** | Sheet must remain publicly readable for CSV export; sync failures surface in Worker logs and `/api/sync` responses |
+| **R2** | Cache bucket size and request metrics for `sebraiers-opennext-cache` — via Cloudflare dashboard |
 
 ### Error tracking
 
-No application-level error tracking SDK (Sentry, Datadog, New Relic, OpenTelemetry) is configured in `package.json` dependencies. Production error visibility relies on Cloudflare Worker logs and Supabase dashboard metrics.
+No application-level error tracking SDK (Sentry, Datadog, New Relic, OpenTelemetry) is configured in `package.json` dependencies. Production error visibility relies on Cloudflare Worker logs and the Supabase dashboard.
 
 ### Cron schedule
 
