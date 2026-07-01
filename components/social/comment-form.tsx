@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useFormState, useFormStatus } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ export function CommentForm({
   postId?: string;
   checkinId?: string;
 }) {
+  const router = useRouter();
   const max = target === 'post' ? POST_MAX : CHECKIN_MAX;
 
   const action = React.useCallback(
@@ -46,11 +48,12 @@ export function CommentForm({
   React.useEffect(() => {
     if (state?.ok) {
       setBody('');
+      router.refresh();
       toast({ title: 'Comentário publicado', variant: 'success' });
     } else if (state && !state.ok) {
       toast({ title: 'Erro', description: state.error, variant: 'error' });
     }
-  }, [state, toast]);
+  }, [state, toast, router]);
 
   const nearLimit = body.length > max - 50;
   const overLimit = body.length > max;

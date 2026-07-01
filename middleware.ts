@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-
-const PUBLIC_PATHS = ['/login', '/signup', '/auth/callback'];
+import { IS_MOCK } from '@/lib/data-source/env';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const { pathname } = request.nextUrl;
+
+  if (IS_MOCK) {
+    return response;
+  }
 
   // Rotas públicas não precisam de auth
   const isPublic =
@@ -13,6 +16,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/auth/') ||
+    pathname.startsWith('/_design') ||
+    pathname.startsWith('/design-preview') ||
     pathname.startsWith('/api/public') ||
     pathname === '/api/sync' ||
     pathname.startsWith('/_next') ||
@@ -64,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo-.*\\.svg|tokens\\.css).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo-.*\\.svg|tokens\\.css|_design|design-preview).*)'],
 };

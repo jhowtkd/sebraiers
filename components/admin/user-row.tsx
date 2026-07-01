@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { toggleUserActiveAction, toggleUserAdminAction } from '@/app/actions/users';
-import { initials } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar } from '@/components/ui/avatar';
 import { formatDate } from '@/lib/utils';
 
 type Item = {
@@ -40,9 +39,7 @@ export function UserRow({ user, isMe }: { user: Item; isMe: boolean }) {
 
   return (
     <li className="rounded-xl border border-border-subtle bg-surface-elevated p-4 flex items-center gap-4">
-      <Avatar className="h-10 w-10">
-        <AvatarFallback className="bg-brand-azul text-white text-caption font-semibold">{initials(user.full_name)}</AvatarFallback>
-      </Avatar>
+      <Avatar size="md" name={user.full_name} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <p className="text-body-sm font-medium text-text-primary truncate">{user.full_name}</p>

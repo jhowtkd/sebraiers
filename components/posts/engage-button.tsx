@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowUpRight, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'sebraeiers:engaged';
@@ -30,7 +29,7 @@ function writeEngaged(postId: string, engaged: boolean) {
     else set.delete(postId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
   } catch {
-    // localStorage quota or disabled — ignore
+    // ignore
   }
 }
 
@@ -41,8 +40,6 @@ type Props = {
 };
 
 export function EngageButton({ postId, url, networkLabel }: Props) {
-  // SSR-safe: initial render matches server (not engaged); localStorage
-  // is read in an effect to avoid hydration mismatch.
   const [engaged, setEngaged] = useState(false);
 
   useEffect(() => {
@@ -61,39 +58,40 @@ export function EngageButton({ postId, url, networkLabel }: Props) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="block group/cta rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-state-success/40"
+      className={cn(
+        'group/cta relative block overflow-hidden rounded-2xl',
+        'focus-visible:outline-none focus-visible:shadow-focus'
+      )}
       aria-label={
-        engaged
-          ? `Reabrir ${networkLabel} (já engajado)`
-          : `Engajar no ${networkLabel}`
+        engaged ? `Reabrir ${networkLabel} (já engajado)` : `Engajar no ${networkLabel}`
       }
     >
-      <Button
-        size="lg"
+      <div
         className={cn(
-          'w-full h-14 px-5 text-body-lg font-bold gap-2 rounded-xl border-0',
-          'bg-state-success hover:bg-state-success-strong text-white',
-          engaged && 'shadow-[inset_0_0_0_2px_rgba(255,255,255,0.35)]'
+          'relative flex items-center justify-center gap-3 h-14 px-5 text-body-lg font-bold rounded-2xl overflow-hidden',
+          'transition-all duration-base ease-out-quart',
+          engaged
+            ? 'bg-state-success text-white shadow-md'
+            : 'bg-gradient-atlantico-cobalto text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
         )}
       >
-        <span>{engaged ? 'ENGAJADO' : 'ENGAJAR'}</span>
         {!engaged && (
-          <span className="font-normal text-white/80 text-caption hidden sm:inline">
-            no {networkLabel}
-          </span>
+          <span className="absolute inset-0 bg-white opacity-0 group-hover/cta:opacity-10 transition-opacity duration-base" />
         )}
+        {engaged && <Sparkles className="h-5 w-5 animate-check-pop" />}
+        <span className="relative">{engaged ? 'ENGAJADO' : 'ENGAJAR AGORA'}</span>
+        <span className="relative font-normal text-white/80 text-caption hidden sm:inline">
+          no {networkLabel}
+        </span>
         {engaged ? (
-          <Check
-            className="h-5 w-5 ml-auto transition-transform duration-200 group-hover/cta:scale-110"
-            aria-hidden
-          />
+          <Check className="h-5 w-5 ml-auto" aria-hidden />
         ) : (
           <ArrowUpRight
-            className="h-5 w-5 ml-auto transition-transform duration-200 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
+            className="h-5 w-5 ml-auto transition-transform duration-base group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
             aria-hidden
           />
         )}
-      </Button>
+      </div>
     </a>
   );
 }
