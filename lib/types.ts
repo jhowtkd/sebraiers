@@ -57,6 +57,16 @@ export interface Checkin {
   admin_note: string | null;
 }
 
+export type CheckinWithPostSummary = {
+  id: string;
+  action: CheckinAction;
+  status: CheckinStatus;
+  points: number;
+  declared_at: string;
+  decided_at: string | null;
+  post: { id: string; title: string; network: Network; cover_url: string | null } | null;
+};
+
 export interface UserPoint {
   user_id: string;
   total_points: number;
