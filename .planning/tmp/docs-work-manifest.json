@@ -1,0 +1,109 @@
+{
+  "canonical_queue": [
+    {
+      "type": "readme",
+      "resolved_path": "README.md",
+      "mode": "regenerate",
+      "preservation_mode": "regenerate",
+      "wave": 1,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 36,
+      "claims_failed": 0
+    },
+    {
+      "type": "architecture",
+      "resolved_path": "docs/ARCHITECTURE.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 1,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 70,
+      "claims_failed": 0
+    },
+    {
+      "type": "configuration",
+      "resolved_path": "docs/CONFIGURATION.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 1,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 39,
+      "claims_failed": 0,
+      "fix_iteration": 1
+    },
+    {
+      "type": "getting_started",
+      "resolved_path": "docs/GETTING-STARTED.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 2,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 22,
+      "claims_failed": 0,
+      "fix_iteration": 1
+    },
+    {
+      "type": "development",
+      "resolved_path": "docs/DEVELOPMENT.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 2,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 28,
+      "claims_failed": 0,
+      "fix_iteration": 1
+    },
+    {
+      "type": "testing",
+      "resolved_path": "docs/TESTING.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 2,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 41,
+      "claims_failed": 0
+    },
+    {
+      "type": "deployment",
+      "resolved_path": "docs/DEPLOYMENT.md",
+      "mode": "create",
+      "preservation_mode": null,
+      "wave": 2,
+      "status": "completed",
+      "verified": true,
+      "claims_passed": 25,
+      "claims_failed": 0
+    }
+  ],
+  "review_queue": [
+    {"path": "docs/brand/00-overview.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/01-logo.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/02-colors.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/03-typography.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/04-iconography.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/05-voice-tone.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/06-components.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/07-spacing-grid.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/08-imagery.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/09-accessibility.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/brand/README.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/plans/2026-06-21-sebraeiers-engajar-button-implementation.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/plans/2026-06-21-sebraeiers-feed-ig-implementation.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/plans/2026-06-21-sebraeiers-implementation.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/plans/2026-06-21-sebraeiers-sheets-sync-implementation.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/plans/2026-06-21-sebraeiers-social-features-implementation.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/specs/2026-06-21-sebraeiers-design.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/specs/2026-06-21-sebraeiers-engajar-button-design.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/specs/2026-06-21-sebraeiers-feed-ig-design.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/specs/2026-06-21-sebraeiers-sheets-sync-design.md", "type": "hand-written", "status": "pending_review"},
+    {"path": "docs/superpowers/specs/2026-06-21-sebraeiers-social-features-design.md", "type": "hand-written", "status": "pending_review"}
+  ],
+  "gap_queue": [],
+  "created_at": "2026-06-30T08:47:00Z"
+}

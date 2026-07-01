@@ -1,0 +1,46 @@
+{
+  "doc_path": "docs/GETTING-STARTED.md",
+  "claims_checked": 22,
+  "claims_passed": 22,
+  "claims_failed": 0,
+  "skipped": [
+    {
+      "line": 122,
+      "claim": "cloudflare-env.d.ts",
+      "category": "file_path",
+      "reason": "Doc explicitly states the file is generated and not versioned in the repository (line 122: 'arquivo gerado a partir de wrangler.jsonc; ele não está versionado no repositório'). Absence of file in repo is the documented expected state — skip rather than fail."
+    }
+  ],
+  "failures": [],
+  "regression_check": {
+    "previous_failures": 1,
+    "previous_failure_claim": "cloudflare-env.d.ts",
+    "previous_failure_line": 122,
+    "resolution": "Claim reclassified as SKIP — doc itself documents that the file is generated and intentionally not tracked in git. All other previously-passing claims re-verified: no regressions detected.",
+    "other_claims_re_verified": [
+      "supabase/migrations/ (line 54) — exists with 10 migration files",
+      "supabase/seed.sql (line 54) — exists",
+      "supabase/seed-demo.sql (line 54) — exists",
+      ".env.example (line 59) — exists",
+      "middleware.ts (line 78) — exists",
+      "0009_agency_admin_domain.sql (line 83) — exists in supabase/migrations/",
+      "wrangler.jsonc (lines 95, 122) — exists",
+      "cloudflare/worker.mjs (line 95) — exists",
+      "../README.md (line 128) — exists",
+      "./ARCHITECTURE.md (line 129) — exists",
+      "./CONFIGURATION.md (line 130) — exists",
+      "./DEVELOPMENT.md (line 131) — exists",
+      "./TESTING.md (line 132) — exists",
+      "./API.md (line 133) — exists",
+      "./DEPLOYMENT.md (line 134) — exists",
+      "pnpm dev (lines 75, 107, 117) — script exists in package.json",
+      "pnpm dlx supabase start/stop/db reset (lines 43, 51, 102) — supabase in devDependencies",
+      "pnpm cf-typegen (line 122) — script exists in package.json",
+      "cp .env.example .env.local (line 59) — .env.example exists",
+      "POST /api/sync (line 91) — endpoint referenced in tests/lib/sync/execute-sheet-sync.test.ts and middleware.ts",
+      "sync_admin_jwt_claim trigger (line 112) — defined in supabase/migrations/0002_security_hardening.sql",
+      "WORKER_SELF_REFERENCE binding (line 95) — defined in wrangler.jsonc and used in cloudflare/worker.mjs",
+      "is_agency_admin_email rule (line 83) — defined in supabase/migrations/0009_agency_admin_domain.sql"
+    ]
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "doc_writer_model": "sonnet",
+  "commit_docs": true,
+  "existing_docs": [
+    {
+      "path": "docs/brand/00-overview.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/01-logo.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/02-colors.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/03-typography.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/04-iconography.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/05-voice-tone.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/06-components.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/07-spacing-grid.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/08-imagery.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/09-accessibility.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/brand/README.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-21-sebraeiers-engajar-button-implementation.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-21-sebraeiers-feed-ig-implementation.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-21-sebraeiers-implementation.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-21-sebraeiers-sheets-sync-implementation.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-21-sebraeiers-social-features-implementation.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-21-sebraeiers-design.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-21-sebraeiers-engajar-button-design.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-21-sebraeiers-feed-ig-design.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-21-sebraeiers-sheets-sync-design.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-21-sebraeiers-social-features-design.md",
+      "has_gsd_marker": false
+    },
+    {
+      "path": "README.md",
+      "has_gsd_marker": false
+    }
+  ],
+  "project_type": {
+    "has_package_json": true,
+    "has_api_routes": false,
+    "has_cli_bin": false,
+    "is_open_source": false,
+    "has_deploy_config": true,
+    "is_monorepo": false,
+    "has_tests": true
+  },
+  "doc_tooling": {
+    "docusaurus": false,
+    "vitepress": false,
+    "mkdocs": false,
+    "storybook": false
+  },
+  "monorepo_workspaces": [],
+  "planning_exists": true,
+  "project_root": "/Users/jhonatan/Repos/Sebraiers",
+  "agents_installed": true,
+  "missing_agents": []
+}

@@ -39,3 +39,12 @@ supabase/.temp/
 
 # SDD workflow artifacts (internal planning, not part of the product)
 .superpowers/
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
