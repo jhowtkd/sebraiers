@@ -73,7 +73,7 @@ pnpm upload       # build OpenNext + upload do bundle
 pnpm deploy       # build OpenNext + deploy para Cloudflare Workers
 ```
 
-Configure os secrets do Worker (`CRON_SECRET`, variáveis Supabase) no painel Cloudflare ou via `wrangler secret put`. `pnpm cf-typegen` gera o tipo `cloudflare-env.d.ts` para bindings. <!-- VERIFY: URL de produção do Worker no Cloudflare -->
+Configure os secrets do Worker (`CRON_SECRET`, variáveis Supabase) no painel Cloudflare ou via `wrangler secret put`. `pnpm cf-typegen` gera o tipo `cloudflare-env.d.ts` para bindings. Produção: https://sebraiers.jhonatansoares.com
 
 ### CI/CD
 
