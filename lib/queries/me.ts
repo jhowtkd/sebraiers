@@ -1,11 +1,10 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import { getSession } from '@/lib/auth';
 import type { CheckinWithPostSummary } from '@/lib/types';
 import { getCheckinsEngagementBatch, type CheckinEngagement } from '@/lib/queries/checkins';
-import type { PerformanceDashboard, PerformanceTotals, MyCheckin } from '@/lib/queries/dashboard-types';
+import type { PerformanceDashboard, PerformanceTotals } from '@/lib/queries/dashboard-types';
 
-export type { PerformanceDashboard, PerformanceTotals, MyCheckin } from '@/lib/queries/dashboard-types';
+export type { PerformanceDashboard, PerformanceTotals } from '@/lib/queries/dashboard-types';
 
 export async function getMyPoints(userId: string): Promise<number> {
   const supabase = await createClient();
@@ -115,11 +114,4 @@ export async function getMyPerformanceDashboard(userId: string): Promise<Perform
   }
 
   return { totalPoints, weeklyPoints, streakDays, totals, checkins, engagementMap };
-}
-
-/** @deprecated Use getMyPerformanceDashboard */
-export async function getMyCheckins(limit = 30): Promise<MyCheckin[]> {
-  const user = await getSession();
-  if (!user) return [];
-  return fetchMyCheckinsWithPost(user.id, limit);
 }
