@@ -168,6 +168,44 @@ Conventions observed across the suite:
 - Use `beforeEach(() => vi.clearAllMocks())` to reset mock state between tests.
 - Use `vi.mock('server-only', ...)` via the alias in `vitest.config.ts` if you import code that pulls in the `server-only` marker.
 
+## RPC smoke tests
+
+The atomic toggle RPCs introduced in `supabase/migrations/0013_toggle_reaction_rpc.sql` (`toggle_post_reaction`, `toggle_checkin_reaction`) are covered by unit tests in `tests/lib/actions/social.test.ts` (which mock `.rpc()`). To verify the SQL itself behaves correctly at the database level, run this smoke test against a local Supabase.
+
+**Prerequisites:** a running local Supabase with all migrations applied.
+
+```bash
+supabase start
+supabase db reset
+```
+
+### Procedure
+
+Run the queries below from the Supabase Studio SQL editor or `supabase mui psql`. Substitute `<post-id>` and `<user-id>` with real IDs from your local seed data (find one of each with `select id from public.posts limit 1;` and `select id from auth.users limit 1;`).
+
+```sql
+-- 1. Set a reaction (first time) → expect 'set'
+select toggle_post_reaction('<post-id>', '<user-id>', 'fire');
+
+-- 2. Toggle the same reaction off → expect 'removed'
+select toggle_post_reaction('<post-id>', '<user-id>', 'fire');
+
+-- 3. Multi-reaction: set 'fire', then set 'clap' → both 'set'
+--    (the composite PK (post_id, user_id, reaction) allows multiple
+--    DISTINCT reactions per user per post, so fire + clap coexist)
+select toggle_post_reaction('<post-id>', '<user-id>', 'fire');
+select toggle_post_reaction('<post-id>', '<user-id>', 'clap');
+
+-- 4. Toggling 'fire' leaves the existing 'clap' untouched → fire 'removed'
+select toggle_post_reaction('<post-id>', '<user-id>', 'fire');
+```
+
+**Expected results:** `set`, `removed`, `set`, `set`, `removed` respectively. Step 4 demonstrates independent per-kind toggling.
+
+The same flow applies to `toggle_checkin_reaction('<checkin-id>', '<user-id>', 'clap')`, noting that `checkin_reactions` only accepts the `clap` kind (CHECK constraint).
+
+> These RPCs are `SECURITY DEFINER` and validate `p_user_id = auth.uid()` internally, so execute them while authenticated as the user whose `id` you pass. To test against the DB directly (bypassing RLS), use the service-role connection from `supabase mui psql`.
+
 ## Coverage requirements
 
 No coverage threshold is configured. The project does not include `coverageThreshold` in `vitest.config.ts`, and there is no `.nycrc`, `c8` config, or equivalent in `package.json`. Run Vitest with the `--coverage` flag if you need a one-off coverage report:
