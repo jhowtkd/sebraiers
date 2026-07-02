@@ -62,7 +62,7 @@ describe('setPostReactionAction (via toggle_post_reaction RPC)', () => {
     rpcMock.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
     const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' });
     expect(res.ok).toBe(false);
-    expect(res.error).toBe('Erro ao reagir');
+    if (!res.ok) expect(res.error).toBe('Erro ao reagir');
   });
 
   it('rejects invalid reaction kind before calling RPC', async () => {
