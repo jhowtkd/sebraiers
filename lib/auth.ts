@@ -2,14 +2,9 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
-import { IS_MOCK, mockGetAuthHeaderContext, mockGetCurrentProfile } from '@/lib/mock/db';
 import type { Profile } from '@/lib/types';
 
 export const getSession = cache(async (): Promise<User | null> => {
-  if (IS_MOCK) {
-    const ctx = mockGetAuthHeaderContext();
-    return ctx.user as unknown as User;
-  }
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,9 +13,6 @@ export const getSession = cache(async (): Promise<User | null> => {
 });
 
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
-  if (IS_MOCK) {
-    return mockGetCurrentProfile();
-  }
   const user = await getSession();
   if (!user) return null;
   const supabase = await createClient();
@@ -42,9 +34,6 @@ export type AuthHeaderContext = {
 
 /** Single auth + profile fetch for layout header (deduped per request via cache). */
 export const getAuthHeaderContext = cache(async (): Promise<AuthHeaderContext | null> => {
-  if (IS_MOCK) {
-    return mockGetAuthHeaderContext();
-  }
   const user = await getSession();
   if (!user) return null;
   const supabase = await createClient();
@@ -64,19 +53,12 @@ export const getAuthHeaderContext = cache(async (): Promise<AuthHeaderContext | 
 });
 
 export async function requireUser() {
-  if (IS_MOCK) {
-    const ctx = mockGetAuthHeaderContext();
-    return ctx.user as unknown as User;
-  }
   const user = await getSession();
   if (!user) redirect('/login');
   return user;
 }
 
 export async function requireAdmin() {
-  if (IS_MOCK) {
-    return mockGetCurrentProfile();
-  }
   const profile = await getCurrentProfile();
   if (!profile) redirect('/login');
   if (!profile.is_admin) redirect('/timeline');
