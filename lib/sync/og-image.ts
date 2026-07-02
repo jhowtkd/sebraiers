@@ -1,5 +1,36 @@
 import 'server-only';
 
+// Hosts permitted for OG image fetching. Limited to the social networks
+// the product syncs from. Anything else (incl. internal/SSRF targets like
+// 169.254.169.254, localhost, private ranges) is rejected before fetching.
+const ALLOWED_HOSTS = new Set([
+  'instagram.com',
+  'www.instagram.com',
+  'linkedin.com',
+  'www.linkedin.com',
+  'facebook.com',
+  'www.facebook.com',
+  'm.facebook.com',
+  'web.facebook.com',
+  'tiktok.com',
+  'www.tiktok.com',
+  'youtube.com',
+  'www.youtube.com',
+  'youtu.be',
+  'threads.net',
+  'www.threads.net',
+]);
+
+function isAllowedHost(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  return ALLOWED_HOSTS.has(parsed.hostname.toLowerCase());
+}
+
 // Reject well-known wrong-og:image patterns.
 function isValidPostImage(url: string): boolean {
   if (/pbs\.twimg\.com\/profile_images\//.test(url)) return false;
@@ -7,6 +38,8 @@ function isValidPostImage(url: string): boolean {
 }
 
 export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<string | null> {
+  if (!isAllowedHost(url)) return null;
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
