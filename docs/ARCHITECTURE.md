@@ -145,4 +145,4 @@ graph TD
 - **Database**: Supabase (managed Postgres 17) with RLS as the canonical access guard. Local dev uses the Supabase CLI against Docker (`pnpm dlx supabase start`).
 - **Scheduled jobs**: Cloudflare Cron (`0 */6 * * *`) → Worker `scheduled` handler → internal `fetch` to `/api/sync`. Manual override via the admin `SyncButton` or a `curl -X POST … -H "x-cron-secret: …"` against `/api/sync`.
 
-<!-- VERIFY: production Worker URL and exact Cloudflare account/project name -->
+- **Production**: https://sebraiers.jhonatansoares.com (Cloudflare Workers, project `sebraiers`).

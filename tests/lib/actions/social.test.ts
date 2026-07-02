@@ -1,11 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
+// Mock supabase server client BEFORE importing the actions.
+// `rpc` backs the reaction (toggle_*) actions; `from` backs the comment (insert) actions.
 const getUserMock = vi.fn();
 const fromMock = vi.fn();
+const rpcMock = vi.fn();
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: () => Promise.resolve({ auth: { getUser: getUserMock }, from: fromMock }),
+  createClient: vi.fn(async () => ({
+    auth: { getUser: getUserMock },
+    from: fromMock,
+    rpc: rpcMock,
+  })),
 }));
 
 import { setPostReactionAction, addPostCommentAction, setCheckinReactionAction, addCheckinCommentAction } from '@/app/actions/social';
@@ -22,58 +30,45 @@ function chain(value: any) {
   return obj;
 }
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Default to an authenticated user for all suites.
+  getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+});
 
-describe('setPostReactionAction', () => {
-  it('rejects unauthenticated', async () => {
-    getUserMock.mockResolvedValue({ data: { user: null } });
-    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' });
-    expect(res.ok).toBe(false);
-  });
+describe('setPostReactionAction (via toggle_post_reaction RPC)', () => {
+  beforeEach(() => rpcMock.mockReset());
 
-  it('rejects invalid reaction', async () => {
-    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'banana' as any });
-    expect(res.ok).toBe(false);
-  });
-
-  it('removes existing reaction if user re-clicks the same one', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
-    let call = 0;
-    fromMock.mockImplementation(() => {
-      call++;
-      if (call === 1) return chain({ data: [{ reaction: 'fire' }], error: null });
-      return chain({ data: null, error: null });
-    });
+  it('returns reaction set when RPC returns "set"', async () => {
+    rpcMock.mockResolvedValueOnce({ data: 'set', error: null });
     const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' });
     expect(res.ok).toBe(true);
-    if (res.ok) expect(res.reaction).toBe(null);
+    expect(res.reaction).toBe('fire');
+    expect(rpcMock).toHaveBeenCalledWith('toggle_post_reaction', {
+      p_post_id: '11111111-1111-1111-1111-111111111111',
+      p_user_id: 'user-1',
+      p_reaction: 'fire',
+    });
   });
 
-  it('inserts when user has no current reaction', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
-    let call = 0;
-    fromMock.mockImplementation(() => {
-      call++;
-      if (call === 1) return chain({ data: [], error: null });
-      return chain({ data: null, error: null });
-    });
-    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'muscle' });
+  it('returns reaction null when RPC returns "removed" (toggle off)', async () => {
+    rpcMock.mockResolvedValueOnce({ data: 'removed', error: null });
+    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' });
     expect(res.ok).toBe(true);
-    if (res.ok) expect(res.reaction).toBe('muscle');
+    expect(res.reaction).toBeNull();
   });
 
-  it('replaces current reaction when user clicks a different one', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
-    let call = 0;
-    fromMock.mockImplementation(() => {
-      call++;
-      if (call === 1) return chain({ data: [{ reaction: 'fire' }], error: null });
-      if (call === 2) return chain({ data: null, error: null });
-      return chain({ data: null, error: null });
-    });
-    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'laugh' });
-    expect(res.ok).toBe(true);
-    if (res.ok) expect(res.reaction).toBe('laugh');
+  it('returns ok:false on RPC error', async () => {
+    rpcMock.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
+    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toBe('Erro ao reagir');
+  });
+
+  it('rejects invalid reaction kind before calling RPC', async () => {
+    const res = await setPostReactionAction({ post_id: '11111111-1111-1111-1111-111111111111', reaction: 'invalid' });
+    expect(res.ok).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 });
 
@@ -84,7 +79,6 @@ describe('addPostCommentAction', () => {
   });
 
   it('inserts comment successfully', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
     fromMock.mockImplementation(() => chain({ data: null, error: null }));
     const res = await addPostCommentAction({ post_id: '11111111-1111-1111-1111-111111111111', body: 'Arrasou!' });
     expect(res.ok).toBe(true);
@@ -96,29 +90,26 @@ describe('addPostCommentAction', () => {
   });
 });
 
-describe('setCheckinReactionAction', () => {
-  it('inserts clap on approved checkin', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
-    let call = 0;
-    fromMock.mockImplementation(() => {
-      call++;
-      if (call === 1) return chain({ data: [], error: null });
-      return chain({ data: null, error: null });
-    });
-    const res = await setCheckinReactionAction({ checkin_id: '11111111-1111-1111-1111-111111111111', reaction: 'clap' });
+describe('setCheckinReactionAction (via toggle_checkin_reaction RPC)', () => {
+  beforeEach(() => rpcMock.mockReset());
+
+  it('returns reaction set when RPC returns "set"', async () => {
+    rpcMock.mockResolvedValueOnce({ data: 'set', error: null });
+    const res = await setCheckinReactionAction({ checkin_id: '22222222-2222-2222-2222-222222222222', reaction: 'clap' });
     expect(res.ok).toBe(true);
-    if (res.ok) expect(res.reaction).toBe('clap');
+    expect(res.reaction).toBe('clap');
   });
 
-  it('rejects non-clap reaction', async () => {
-    const res = await setCheckinReactionAction({ checkin_id: '11111111-1111-1111-1111-111111111111', reaction: 'fire' as any });
-    expect(res.ok).toBe(false);
+  it('returns reaction null when toggled off', async () => {
+    rpcMock.mockResolvedValueOnce({ data: 'removed', error: null });
+    const res = await setCheckinReactionAction({ checkin_id: '22222222-2222-2222-2222-222222222222', reaction: 'clap' });
+    expect(res.ok).toBe(true);
+    expect(res.reaction).toBeNull();
   });
 });
 
 describe('addCheckinCommentAction', () => {
   it('inserts comment successfully', async () => {
-    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
     fromMock.mockImplementation(() => chain({ data: null, error: null }));
     const res = await addCheckinCommentAction({ checkin_id: '11111111-1111-1111-1111-111111111111', body: 'Tamo junto!' });
     expect(res.ok).toBe(true);

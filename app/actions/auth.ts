@@ -30,6 +30,16 @@ export async function signUpAction(_prev: ActionResult | null, formData: FormDat
   redirect('/perfil');
 }
 
+/** Validates a post-login redirect path: must be relative, not an auth route. */
+function safeRedirectPath(next: string | null | undefined): string {
+  if (!next) return '/timeline';
+  // Must be an absolute path (starts with /) but not a protocol-relative URL (//evil.com).
+  if (!next.startsWith('/') || next.startsWith('//')) return '/timeline';
+  // Avoid redirect loops: never allow landing back on auth pages.
+  if (next === '/login' || next === '/signup' || next.startsWith('/auth/')) return '/timeline';
+  return next;
+}
+
 export async function signInAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const parsed = loginSchema.safeParse({
     email: formData.get('email'),
@@ -39,7 +49,7 @@ export async function signInAction(_prev: ActionResult | null, formData: FormDat
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { ok: false, error: 'Email ou senha inválidos' };
-  redirect('/timeline');
+  redirect(safeRedirectPath(formData.get('next') as string | null));
 }
 
 export async function signOutAction() {

@@ -73,15 +73,9 @@ export const checkinDecideSchema = z.object({
   note: z.string().max(500).nullable().optional(),
 });
 
-export const userToggleSchema = z.object({
-  user_id: z.string().uuid(),
-  is_active: z.boolean(),
-});
-
-export const postReactionKindSchema = z.enum(['fire', 'muscle', 'clap', 'raised', 'laugh']);
 export const postReactionSetSchema = z.object({
   post_id: z.string().uuid('Post inválido'),
-  reaction: postReactionKindSchema,
+  reaction: z.enum(['fire', 'muscle', 'clap', 'raised', 'laugh']),
 });
 export const postCommentSchema = z.object({
   post_id: z.string().uuid('Post inválido'),
@@ -104,7 +98,6 @@ export type ProfileSocialsInput = z.infer<typeof profileSocialsSchema>;
 export type PostInput = z.infer<typeof postSchema>;
 export type CheckinDeclareInput = z.infer<typeof checkinDeclareSchema>;
 export type CheckinDecideInput = z.infer<typeof checkinDecideSchema>;
-export type UserToggleInput = z.infer<typeof userToggleSchema>;
 export type PostReactionSetInput = z.infer<typeof postReactionSetSchema>;
 export type PostCommentInput = z.infer<typeof postCommentSchema>;
 export type CheckinReactionSetInput = z.infer<typeof checkinReactionSetSchema>;

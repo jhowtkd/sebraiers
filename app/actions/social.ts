@@ -27,38 +27,17 @@ export async function setPostReactionAction(input: { post_id: string; reaction: 
   if (!userId) return { ok: false, error: 'Não autenticado' };
 
   const supabase = await createClient();
-  const { data: current } = await supabase
-    .from('post_reactions')
-    .select('reaction')
-    .eq('post_id', parsed.data.post_id)
-    .eq('user_id', userId);
-
-  const hadSame = current && current.length === 1 && current[0].reaction === parsed.data.reaction;
-
-  if (current && current.length > 0) {
-    await supabase
-      .from('post_reactions')
-      .delete()
-      .eq('post_id', parsed.data.post_id)
-      .eq('user_id', userId);
-  }
-
-  if (hadSame) {
-    revalidatePath('/timeline');
-    revalidatePath(`/post/${parsed.data.post_id}`);
-    return { ok: true, reaction: null };
-  }
-
-  const { error } = await supabase.from('post_reactions').insert({
-    post_id: parsed.data.post_id,
-    user_id: userId,
-    reaction: parsed.data.reaction,
+  const { data, error } = await supabase.rpc('toggle_post_reaction', {
+    p_post_id: parsed.data.post_id,
+    p_user_id: userId,
+    p_reaction: parsed.data.reaction,
   });
   if (error) return { ok: false, error: 'Erro ao reagir' };
 
+  const reaction = data === 'set' ? parsed.data.reaction : null;
   revalidatePath('/timeline');
   revalidatePath(`/post/${parsed.data.post_id}`);
-  return { ok: true, reaction: parsed.data.reaction };
+  return { ok: true, reaction };
 }
 
 export async function addPostCommentAction(input: { post_id: string; body: string }): Promise<ActionResult> {
@@ -89,36 +68,16 @@ export async function setCheckinReactionAction(input: { checkin_id: string; reac
   if (!userId) return { ok: false, error: 'Não autenticado' };
 
   const supabase = await createClient();
-  const { data: current } = await supabase
-    .from('checkin_reactions')
-    .select('reaction')
-    .eq('checkin_id', parsed.data.checkin_id)
-    .eq('user_id', userId);
-
-  const hadSame = current && current.length === 1 && current[0].reaction === parsed.data.reaction;
-
-  if (current && current.length > 0) {
-    await supabase
-      .from('checkin_reactions')
-      .delete()
-      .eq('checkin_id', parsed.data.checkin_id)
-      .eq('user_id', userId);
-  }
-
-  if (hadSame) {
-    revalidatePath('/meu-desempenho');
-    return { ok: true, reaction: null };
-  }
-
-  const { error } = await supabase.from('checkin_reactions').insert({
-    checkin_id: parsed.data.checkin_id,
-    user_id: userId,
-    reaction: parsed.data.reaction,
+  const { data, error } = await supabase.rpc('toggle_checkin_reaction', {
+    p_checkin_id: parsed.data.checkin_id,
+    p_user_id: userId,
+    p_reaction: parsed.data.reaction,
   });
   if (error) return { ok: false, error: 'Erro ao reagir' };
 
+  const reaction = data === 'set' ? parsed.data.reaction : null;
   revalidatePath('/meu-desempenho');
-  return { ok: true, reaction: parsed.data.reaction };
+  return { ok: true, reaction };
 }
 
 export async function addCheckinCommentAction(input: { checkin_id: string; body: string }): Promise<ActionResult> {

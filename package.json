@@ -16,6 +16,10 @@
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@icons-pack/react-simple-icons": "^13.13.0",

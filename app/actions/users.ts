@@ -1,16 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
 import type { ActionResult } from '@/app/actions/auth';
-
-async function requireAdminOrFail() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, profile: null } as const;
-  const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
-  return { supabase, user, profile };
-}
+import { requireAdminOrFail } from '@/app/actions/_shared/admin-guard';
 
 export async function toggleUserActiveAction(userId: string, isActive: boolean): Promise<ActionResult> {
   const { supabase, user, profile } = await requireAdminOrFail();

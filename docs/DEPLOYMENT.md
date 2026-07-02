@@ -61,9 +61,9 @@ pnpm deploy
 
 ### Pre-deploy checklist
 
-1. **R2 bucket** — Create `sebraiers-opennext-cache` in your Cloudflare account before the first deploy. <!-- VERIFY: R2 bucket region and dashboard creation steps -->
+1. **R2 bucket** — Create `sebraiers-opennext-cache` in your Cloudflare account (any region) before the first deploy.
 2. **Worker secrets** — Set all required environment variables (see [Environment setup](#environment-setup)).
-3. **Supabase** — Apply migrations (`supabase db push` or dashboard) and configure Auth redirect URLs for the production domain. <!-- VERIFY: production Supabase project URL and redirect URLs -->
+3. **Supabase** — Apply migrations (`supabase db push` or dashboard) and configure Auth redirect URLs for the production domain (`https://sebraiers.jhonatansoares.com`).
 4. **Cron constant sync** — If you change the cron schedule in `wrangler.jsonc`, update the `SYNC_CRON` constant in `cloudflare/worker.mjs` to match exactly. The two values must agree or the cron handler will silently skip.
 
 ## Environment setup
@@ -122,7 +122,7 @@ No automated rollback is defined in the repository. Use one of these approaches:
 
 1. Open the Cloudflare dashboard → **Workers & Pages** → worker `sebraiers`.
 2. Go to **Deployments** (or **Versions**).
-3. Select a previous successful deployment and **Rollback** or redeploy that version. <!-- VERIFY: Cloudflare account dashboard URL -->
+3. Select a previous successful deployment and **Rollback** or redeploy that version.
 
 ### Wrangler CLI
 
@@ -139,7 +139,7 @@ After rollback, verify the app loads, auth works against Supabase, and cron logs
 ### Manual sync after rollback
 
 ```bash
-curl -X POST https://<!-- VERIFY: production Workers URL -->/api/sync \
+curl -X POST https://sebraiers.jhonatansoares.com/api/sync \
   -H "x-cron-secret: $CRON_SECRET"
 ```
 
@@ -155,7 +155,7 @@ curl -X POST https://<!-- VERIFY: production Workers URL -->/api/sync \
 }
 ```
 
-Use the Cloudflare dashboard → **Workers & Pages** → `sebraiers` → **Logs** / **Analytics** to inspect requests, errors, and cron invocations. <!-- VERIFY: Cloudflare account dashboard URL -->
+Use the Cloudflare dashboard → **Workers & Pages** → `sebraiers` → **Logs** / **Analytics** to inspect requests, errors, and cron invocations.
 
 ### Application logging
 

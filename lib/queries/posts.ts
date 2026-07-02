@@ -1,13 +1,5 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import { IS_MOCK } from '@/lib/data-source/env';
-import {
-  mockGetTimeline,
-  mockGetPostById,
-  mockGetPostsEngagementBatch,
-  mockGetPostEngagementWithComments,
-  mockGetPostEngagement,
-} from '@/lib/mock/db';
 import {
   buildEngagementBatch,
   countReactions,
@@ -21,7 +13,6 @@ export type PostEngagement = BaseEngagement;
 export type { CommentWithUser };
 
 export async function getTimeline(opts: { network?: Network | 'all'; search?: string } = {}): Promise<Post[]> {
-  if (IS_MOCK) return mockGetTimeline(opts);
   const supabase = await createClient();
   let q = supabase.from('posts').select('*, author:profiles!posts_created_by_fkey(full_name, username, avatar_url)').eq('is_active', true)
     .order('published_at', { ascending: false }).limit(100);
@@ -33,7 +24,6 @@ export async function getTimeline(opts: { network?: Network | 'all'; search?: st
 }
 
 export async function getPostById(id: string): Promise<Post | null> {
-  if (IS_MOCK) return mockGetPostById(id);
   const supabase = await createClient();
   const { data, error } = await supabase.from('posts').select('*').eq('id', id).eq('is_active', true).maybeSingle();
   if (error) throw error;
@@ -41,7 +31,6 @@ export async function getPostById(id: string): Promise<Post | null> {
 }
 
 export async function getPostEngagement(postId: string, userId: string | null): Promise<PostEngagement> {
-  if (IS_MOCK) return mockGetPostEngagement(postId, userId);
   const supabase = await createClient();
   const [rxRes, myRxRes, countRes] = await Promise.all([
     supabase.from('post_reactions').select('reaction').eq('post_id', postId),
@@ -61,7 +50,6 @@ export async function getPostsEngagementBatch(
   postIds: string[],
   userId: string | null
 ): Promise<Map<string, PostEngagement>> {
-  if (IS_MOCK) return mockGetPostsEngagementBatch(postIds, userId);
   if (postIds.length === 0) return new Map();
   const supabase = await createClient();
   const [rxRes, myRxRes, commentsRes] = await Promise.all([
@@ -83,7 +71,6 @@ export async function getPostEngagementWithComments(
   postId: string,
   userId: string | null
 ): Promise<PostEngagement & { comments: CommentWithUser[] }> {
-  if (IS_MOCK) return mockGetPostEngagementWithComments(postId, userId);
   const supabase = await createClient();
   const [engagement, commentsRes] = await Promise.all([
     getPostEngagement(postId, userId),
