@@ -2,23 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { postSchema } from '@/lib/validation';
 import type { ActionResult } from '@/app/actions/auth';
-
-async function requireAdminOrFail() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, profile: null } as const;
-  const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
-  return { supabase, user, profile };
-}
-
-function fileFromFormData(formData: FormData, key: string): File | null {
-  const v = formData.get(key);
-  return v instanceof File && v.size > 0 ? v : null;
-}
+import { requireAdminOrFail, fileFromFormData } from '@/app/actions/_shared/admin-guard';
 
 export async function createPostAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const { supabase, user, profile } = await requireAdminOrFail();
