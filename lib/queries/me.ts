@@ -1,13 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/auth';
-import { IS_MOCK } from '@/lib/data-source/env';
-import {
-  mockGetMyPoints,
-  mockGetMyWeeklyPoints,
-  mockGetMyStreakDays,
-  mockGetMyPerformanceDashboard,
-} from '@/lib/mock/db';
 import type { CheckinWithPostSummary } from '@/lib/types';
 import { getCheckinsEngagementBatch, type CheckinEngagement } from '@/lib/queries/checkins';
 import type { PerformanceDashboard, PerformanceTotals, MyCheckin } from '@/lib/queries/dashboard-types';
@@ -15,7 +8,6 @@ import type { PerformanceDashboard, PerformanceTotals, MyCheckin } from '@/lib/q
 export type { PerformanceDashboard, PerformanceTotals, MyCheckin } from '@/lib/queries/dashboard-types';
 
 export async function getMyPoints(userId: string): Promise<number> {
-  if (IS_MOCK) return mockGetMyPoints(userId);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('user_points')
@@ -27,7 +19,6 @@ export async function getMyPoints(userId: string): Promise<number> {
 }
 
 export async function getMyWeeklyPoints(userId: string): Promise<number> {
-  if (IS_MOCK) return mockGetMyWeeklyPoints(userId);
   const supabase = await createClient();
   const since = new Date();
   since.setDate(since.getDate() - 7);
@@ -42,7 +33,6 @@ export async function getMyWeeklyPoints(userId: string): Promise<number> {
 }
 
 export async function getMyStreakDays(userId: string): Promise<number> {
-  if (IS_MOCK) return mockGetMyStreakDays(userId);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('checkins')
@@ -101,8 +91,6 @@ async function fetchCheckinStatusTotals(userId: string): Promise<PerformanceTota
 }
 
 export async function getMyPerformanceDashboard(userId: string): Promise<PerformanceDashboard> {
-  if (IS_MOCK) return mockGetMyPerformanceDashboard(userId);
-
   const [totalPoints, weeklyPoints, streakDays, totals, checkins] = await Promise.all([
     getMyPoints(userId),
     getMyWeeklyPoints(userId),
@@ -133,9 +121,5 @@ export async function getMyPerformanceDashboard(userId: string): Promise<Perform
 export async function getMyCheckins(limit = 30): Promise<MyCheckin[]> {
   const user = await getSession();
   if (!user) return [];
-  if (IS_MOCK) {
-    const dash = await mockGetMyPerformanceDashboard(user.id);
-    return dash.checkins.slice(0, limit);
-  }
   return fetchMyCheckinsWithPost(user.id, limit);
 }
