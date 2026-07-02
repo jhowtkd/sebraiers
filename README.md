@@ -75,6 +75,17 @@ pnpm deploy       # build OpenNext + deploy para Cloudflare Workers
 
 Configure os secrets do Worker (`CRON_SECRET`, variáveis Supabase) no painel Cloudflare ou via `wrangler secret put`. `pnpm cf-typegen` gera o tipo `cloudflare-env.d.ts` para bindings. <!-- VERIFY: URL de produção do Worker no Cloudflare -->
 
+### CI/CD
+
+Todo pull request e push para `main` rodam automaticamente o pipeline do GitHub Actions (`.github/workflows/ci.yml`):
+
+1. **Typecheck** — `tsc --noEmit`
+2. **Lint** — `next lint`
+3. **Test** — `vitest run`
+4. **Build** — `next build`
+
+Um PR só pode ser mergeado quando todos os steps passam. Deploy para Cloudflare ainda é manual (`pnpm deploy`); automação de deploy é um item futuro.
+
 ### Sync manual de planilha Google
 
 Com `SHEET_ID` e `CRON_SECRET` configurados:
