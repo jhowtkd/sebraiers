@@ -68,11 +68,38 @@ describe('signInAction', () => {
     expect(res.ok).toBe(false);
   });
 
-  it('redirects on success', async () => {
+  it('falls back to /timeline when next is missing', async () => {
     signInMock.mockResolvedValue({ error: null });
     const fd = new FormData();
     fd.set('email', 'user@sebrae.com.br');
     fd.set('password', 'rightpass1');
+    await expect(signInAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/timeline');
+  });
+
+  it('uses next when it is a valid relative path', async () => {
+    signInMock.mockResolvedValue({ error: null });
+    const fd = new FormData();
+    fd.set('email', 'user@sebrae.com.br');
+    fd.set('password', 'rightpass1');
+    fd.set('next', '/post/abc');
+    await expect(signInAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/post/abc');
+  });
+
+  it('rejects protocol-relative URLs (open redirect)', async () => {
+    signInMock.mockResolvedValue({ error: null });
+    const fd = new FormData();
+    fd.set('email', 'user@sebrae.com.br');
+    fd.set('password', 'rightpass1');
+    fd.set('next', '//evil.com');
+    await expect(signInAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/timeline');
+  });
+
+  it('rejects auth routes to avoid loops', async () => {
+    signInMock.mockResolvedValue({ error: null });
+    const fd = new FormData();
+    fd.set('email', 'user@sebrae.com.br');
+    fd.set('password', 'rightpass1');
+    fd.set('next', '/login');
     await expect(signInAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/timeline');
   });
 });
