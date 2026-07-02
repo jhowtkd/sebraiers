@@ -69,20 +69,3 @@ export function buildEngagementBatch(
   }
   return result;
 }
-
-export function toEngagementRows<T extends string>(
-  rows: Record<string, unknown>[],
-  idField: T
-): { id: string; reaction: string }[] {
-  return rows.map((r) => ({
-    id: String(r[idField]),
-    reaction: String(r.reaction),
-  }));
-}
-
-export function toCommentCountRows<T extends string>(
-  rows: Record<string, unknown>[],
-  idField: T
-): { id: string }[] {
-  return rows.map((r) => ({ id: String(r[idField]) }));
-}
