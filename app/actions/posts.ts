@@ -2,10 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getAdminClient } from '@/lib/supabase/admin';
 import { postSchema } from '@/lib/validation';
 import type { ActionResult } from '@/app/actions/auth';
-import { requireAdminOrFail, fileFromFormData } from '@/app/actions/_shared/admin-guard';
+import { requireAdminOrFail, fileFromFormData, uploadPostCover } from '@/app/actions/_shared/admin-guard';
 
 export async function createPostAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const { supabase, user, profile } = await requireAdminOrFail();
@@ -26,13 +25,9 @@ export async function createPostAction(_prev: ActionResult | null, formData: For
   const cover = fileFromFormData(formData, 'cover_file');
   let cover_url = parsed.data.cover_url ?? null;
   if (cover) {
-    const admin = getAdminClient();
-    const ext = cover.name.split('.').pop();
-    const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await admin.storage.from('post-covers').upload(path, cover, { contentType: cover.type });
-    if (upErr) return { ok: false, error: 'Falha no upload da imagem' };
-    const { data: pub } = admin.storage.from('post-covers').getPublicUrl(path);
-    cover_url = pub.publicUrl;
+    const uploaded = await uploadPostCover(cover);
+    if (uploaded === null) return { ok: false, error: 'Falha no upload da imagem' };
+    cover_url = uploaded;
   }
 
   const { error } = await supabase.from('posts').insert({
@@ -71,13 +66,9 @@ export async function updatePostAction(id: string, _prev: ActionResult | null, f
   const cover = fileFromFormData(formData, 'cover_file');
   let cover_url = parsed.data.cover_url ?? null;
   if (cover) {
-    const admin = getAdminClient();
-    const ext = cover.name.split('.').pop();
-    const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await admin.storage.from('post-covers').upload(path, cover, { contentType: cover.type });
-    if (upErr) return { ok: false, error: 'Falha no upload da imagem' };
-    const { data: pub } = admin.storage.from('post-covers').getPublicUrl(path);
-    cover_url = pub.publicUrl;
+    const uploaded = await uploadPostCover(cover);
+    if (uploaded === null) return { ok: false, error: 'Falha no upload da imagem' };
+    cover_url = uploaded;
   }
 
   const { error } = await supabase.from('posts').update({

@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 type AdminGuardResult = {
@@ -25,4 +26,18 @@ export async function requireAdminOrFail(): Promise<AdminGuardResult> {
 export function fileFromFormData(formData: FormData, key: string): File | null {
   const v = formData.get(key);
   return v instanceof File && v.size > 0 ? v : null;
+}
+
+/**
+ * Uploads a post cover image to the post-covers bucket and returns its public URL.
+ * Returns null if the upload fails (caller surfaces a generic error).
+ */
+export async function uploadPostCover(file: File): Promise<string | null> {
+  const admin = getAdminClient();
+  const ext = file.name.split('.').pop();
+  const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error: upErr } = await admin.storage.from('post-covers').upload(path, file, { contentType: file.type });
+  if (upErr) return null;
+  const { data: pub } = admin.storage.from('post-covers').getPublicUrl(path);
+  return pub.publicUrl;
 }
