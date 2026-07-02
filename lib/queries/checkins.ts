@@ -1,15 +1,12 @@
 import 'server-only';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { IS_MOCK } from '@/lib/data-source/env';
-import { mockGetMyCheckinsForPost, mockGetCheckinEngagement, mockGetCheckinsEngagementBatch } from '@/lib/mock/db';
 import { buildEngagementBatch, countReactions, type BaseEngagement, type CommentWithUser } from '@/lib/social/engagement';
 import type { Checkin, Network } from '@/lib/types';
 
 type CheckinWithPost = Checkin & { post: { id: string; title: string; network: Network; cover_url: string | null } | null };
 
 export async function getMyCheckinsForPost(postId: string): Promise<Checkin[]> {
-  if (IS_MOCK) return mockGetMyCheckinsForPost(postId);
   const user = await getSession();
   if (!user) return [];
   const supabase = await createClient();
@@ -24,7 +21,6 @@ export type CheckinEngagement = BaseEngagement & {
 };
 
 export async function getCheckinEngagement(checkinId: string, userId: string | null): Promise<CheckinEngagement> {
-  if (IS_MOCK) return mockGetCheckinEngagement(checkinId, userId);
   const supabase = await createClient();
   const [rxRes, myRxRes, countRes, commentsRes] = await Promise.all([
     supabase.from('checkin_reactions').select('reaction').eq('checkin_id', checkinId),
@@ -50,7 +46,6 @@ export async function getCheckinsEngagementBatch(
   checkinIds: string[],
   userId: string | null
 ): Promise<Map<string, BaseEngagement>> {
-  if (IS_MOCK) return mockGetCheckinsEngagementBatch(checkinIds, userId);
   if (checkinIds.length === 0) return new Map();
   const supabase = await createClient();
   const [rxRes, myRxRes, commentsRes] = await Promise.all([
