@@ -64,10 +64,3 @@ export async function requireAdmin() {
   if (!profile.is_admin) redirect('/timeline');
   return profile;
 }
-
-export const AGENCY_ADMIN_EMAIL_DOMAIN = '@conteudoedu.com.br';
-
-export function isAgencyAdminEmail(email: string | undefined | null): boolean {
-  if (!email) return false;
-  return email.toLowerCase().endsWith(AGENCY_ADMIN_EMAIL_DOMAIN);
-}
