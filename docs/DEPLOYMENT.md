@@ -34,7 +34,7 @@ Worker name: `sebraiers`. Compatibility date: `2026-06-22` with the `nodejs_comp
 
 ## Build pipeline
 
-No CI/CD pipeline is configured in this repository (no `.github/workflows/` deploy workflows detected). Deploys are run manually from a developer machine or an admin workstation.
+CI runs on every PR and push to `main` via `.github/workflows/ci.yml` (typecheck, lint, test). **Deploys** to Cloudflare are still manual from a developer machine or admin workstation — there is no automated deploy workflow yet.
 
 ### Manual deploy (production)
 

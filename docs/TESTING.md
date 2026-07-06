@@ -216,9 +216,14 @@ pnpm vitest run --coverage
 
 ## CI integration
 
-No CI workflow is configured for this project. There is no `.github/workflows/` directory and no other CI configuration files (e.g., `.circleci/`, `.gitlab-ci.yml`, `bitbucket-pipelines.yml`) in the repository.
+Pull requests and pushes to `main` run `.github/workflows/ci.yml` on GitHub Actions:
 
-Tests are expected to be run locally before pushing or deploying. Add a CI workflow when ready — a typical GitHub Actions job would install dependencies with `pnpm install --frozen-lockfile` and execute `pnpm test`.
+1. `pnpm install --frozen-lockfile`
+2. `pnpm typecheck`
+3. `pnpm lint`
+4. `pnpm test`
+
+Run the same sequence locally before pushing if you want to mirror CI.
 
 ## Linting and type-checking alongside tests
 

@@ -73,7 +73,7 @@ Cloudflare Workers configuration for OpenNext deployment. Key sections:
 | `triggers.crons` | Runs sheet sync every 6 hours (`0 */6 * * *`) |
 | `observability` | Enables Cloudflare Workers observability |
 
-The R2 bucket name `sebraiers-opennext-cache` must exist in your Cloudflare account before deploy. <!-- VERIFY: R2 bucket region and creation steps in Cloudflare dashboard -->
+The R2 bucket name `sebraiers-opennext-cache` must exist in your Cloudflare account before the first deploy. Create it in the Cloudflare dashboard under **R2 → Create bucket** (any region is fine for this cache use case). See [DEPLOYMENT.md](./DEPLOYMENT.md#pre-deploy-checklist) for the full pre-deploy checklist.
 
 ### `open-next.config.ts`
 
