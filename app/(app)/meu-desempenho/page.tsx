@@ -4,6 +4,7 @@ import { CheckinHistoryList } from '@/components/posts/checkin-history-list';
 import { TierProgress, tierForPoints } from '@/components/ui/tier-badge';
 import { getMyPerformanceDashboard } from '@/lib/queries/me';
 import { formatPoints } from '@/lib/utils';
+import { TourReplayButton } from '@/components/onboarding/tour-replay-button';
 
 export default async function MyPerformancePage() {
   const user = await requireUser();
@@ -17,9 +18,12 @@ export default async function MyPerformancePage() {
         <p className="text-caption font-bold uppercase tracking-overline text-brand-azul">
           Meu desempenho
         </p>
-        <h1 className="text-h1 sm:text-display font-black tracking-tighter leading-[0.95] text-text-primary text-balance">
-          {formatPoints(totalPoints)} pontos e contando.
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-h1 sm:text-display font-black tracking-tighter leading-[0.95] text-text-primary text-balance">
+            {formatPoints(totalPoints)} pontos e contando.
+          </h1>
+          <TourReplayButton role="user" />
+        </div>
       </section>
 
       {/* Card de status hero */}

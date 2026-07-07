@@ -3,6 +3,7 @@ import { getAdminMetrics } from '@/lib/queries/metrics';
 import { MetricsCards } from '@/components/admin/metrics-cards';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { NETWORK_LABELS } from '@/lib/types';
+import { TourReplayButton } from '@/components/onboarding/tour-replay-button';
 
 export default async function AdminDashboard() {
   await requireAdmin();
@@ -10,7 +11,10 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-h1 text-text-primary">Painel administrativo</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-h1 text-text-primary">Painel administrativo</h1>
+        <TourReplayButton role="admin" />
+      </div>
       <MetricsCards metrics={m} />
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
