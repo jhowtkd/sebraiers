@@ -24,7 +24,7 @@ export default async function TimelinePage({
         <p className="text-caption font-bold uppercase tracking-overline text-brand-azul">
           O que tá rolando
         </p>
-        <h1 className="text-h1 sm:text-display font-black tracking-tighter leading-[0.95] text-text-primary text-balance">
+        <h1 data-tour="timeline-header" className="text-h1 sm:text-display font-black tracking-tighter leading-[0.95] text-text-primary text-balance">
           Curta, comente ou<br />compartilhe pra somar pontos.
         </h1>
         <p className="text-body-lg text-text-secondary max-w-2xl">

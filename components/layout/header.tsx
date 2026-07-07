@@ -25,6 +25,13 @@ export async function Header() {
               <Link
                 key={href}
                 href={href}
+                data-tour={
+                  href === '/ranking'
+                    ? 'ranking-link'
+                    : href === '/meu-desempenho'
+                    ? 'performance-link'
+                    : undefined
+                }
                 className={cn(
                   'inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full',
                   'text-body-sm font-semibold text-text-secondary',

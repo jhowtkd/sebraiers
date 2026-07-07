@@ -239,3 +239,49 @@ These checks are not part of the test runner but are commonly run together with 
 - See [`README.md`](../README.md) for project overview and quick start.
 - See [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) for the system architecture and where each module fits.
 - See [`docs/CONFIGURATION.md`](./CONFIGURATION.md) for environment variables required by tests that hit Supabase or external services.
+
+## Onboarding Tours (manual smoke)
+
+These steps verify the in-app tour flow for both roles. Run after any change
+to `lib/onboarding/`, `components/onboarding/`, or `app/actions/onboarding.ts`.
+
+### Collaborator tour
+
+1. Sign up a fresh test user (or `psql -c "update profiles set onboarded_at = null where id = '<uuid>'"`).
+2. Log in → land on `/timeline`.
+3. **Expected:** tour appears with 5 steps in this order: timeline header → feed card → declare actions → ranking link → performance link. Step counter shows `N de 5`.
+4. Click "Pular tour" → popover closes, page remains functional.
+5. Reload `/timeline` → **no tour**.
+6. Navigate to `/meu-desempenho` → click "Rever tour" → confirm → page refreshes.
+7. Reload `/timeline` → tour fires again from step 1.
+
+### Admin tour
+
+1. Promote a test user to admin:
+   ```sql
+   insert into public.admin_whitelist (email) values ('test-admin@sebraiers.local')
+   on conflict do nothing;
+   update public.profiles set is_admin = true where id = '<uuid>';
+   update public.profiles set admin_onboarded_at = null where id = '<uuid>';
+   ```
+2. Log in as that user → land on `/timeline` (admin lands here first).
+3. Navigate to `/admin` (or any `/admin/*` route).
+4. **Expected:** admin tour fires with 4 steps: checkins → posts → users → metrics.
+5. Click "Pular tour" → popover closes.
+6. Navigate back to `/admin` → **no tour**.
+7. On `/admin` home, click "Rever tour" → confirm → page refreshes.
+8. Reload `/admin` → admin tour fires again from step 1.
+
+### Accessibility
+
+- Lighthouse a11y ≥ 95 on `/timeline` and `/admin` while a tour is active.
+- Tab cycle stays inside the popover while open.
+- Esc closes the tour (treated as skip).
+- With `prefers-reduced-motion: reduce` enabled in OS, transitions are instant.
+
+### Mobile
+
+- Resize viewport to 375px (Chrome DevTools).
+- Open a tour step → popover uses full width minus 16px margin.
+- Step counter stacks below the title.
+- Body scroll works behind the overlay.

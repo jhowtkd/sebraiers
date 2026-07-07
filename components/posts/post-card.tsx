@@ -72,6 +72,7 @@ export function PostCard({ post, engagement }: Props) {
 
   return (
     <article
+      data-tour="timeline-card"
       className={cn(
         'group relative overflow-hidden rounded-2xl bg-surface-elevated border border-border-subtle shadow-xs',
         'transition-all duration-base ease-out-quart',
