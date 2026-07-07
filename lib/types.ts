@@ -11,6 +11,8 @@ export interface Profile {
   is_admin: boolean;
   is_active: boolean;
   avatar_url: string | null;
+  onboarded_at: string | null;
+  admin_onboarded_at: string | null;
   created_at: string;
 }
 
