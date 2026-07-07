@@ -232,7 +232,7 @@ Retorna `{ steps, currentStep, next, skip, isActive, total }`. Lança se chamado
 
 ### 7.4 Tom
 
-Confere com `PRODUCT.md`: pt-BR idiomático, sem exclamação dupla, sem mascote, sem emoji decorativo. Premium via tipografia e espaçamento. Mobile-first (driver.js responsivo out-of-the-box, mas tema revisado em viewport < 640px).
+Confere com `PRODUCT.md`: pt-BR idiomático, sem exclamação dupla, sem mascote, sem emoji decorativo. Premium via tipografia e espaçamento. Mobile-first: em viewport < 640px, popover ocupa `width: calc(100vw - 32px)` (via media query no tema do driver.js) e step counter fica abaixo do título.
 
 ## 8. A11y
 
