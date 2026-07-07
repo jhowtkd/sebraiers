@@ -17,7 +17,7 @@ const ITEMS: MetricItem[] = [
 
 export function MetricsCards({ metrics }: { metrics: AdminMetrics }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div data-tour="admin-metrics" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {ITEMS.map((it) => {
         const v = metrics[it.key];
         const Icon = it.icon;

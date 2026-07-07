@@ -19,6 +19,15 @@ export function AdminNav() {
         const active = path === href || (href !== '/admin' && path.startsWith(href));
         return (
           <Link key={href} href={href}
+            data-tour={
+              href === '/admin/posts'
+                ? 'admin-posts'
+                : href === '/admin/checkins'
+                ? 'admin-checkins'
+                : href === '/admin/users'
+                ? 'admin-users'
+                : undefined
+            }
             className={cn(
               'flex items-center gap-2 px-3 py-3 text-body-sm font-medium border-b-2 -mb-px transition-colors',
               active ? 'border-brand-azul text-brand-azul' : 'border-transparent text-text-secondary hover:text-text-primary'

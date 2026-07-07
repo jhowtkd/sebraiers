@@ -59,7 +59,7 @@ export function CheckinButtons({
   }
 
   return (
-    <div className="grid sm:grid-cols-3 gap-3">
+    <div data-tour="declare-actions" className="grid sm:grid-cols-3 gap-3">
       {ORDER.map((a) => {
         const status = statusByAction[a];
         const Icon = ICONS[a];
