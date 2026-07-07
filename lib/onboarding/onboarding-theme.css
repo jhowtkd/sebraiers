@@ -1,0 +1,114 @@
+/* driver.js theme aligned with tokens.css (azul Atlântico). */
+.driver-popover.sebraiers-tour {
+  background: hsl(var(--surface-elevated));
+  color: hsl(var(--text-primary));
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border-subtle));
+  box-shadow:
+    0 12px 32px -8px hsl(var(--brand-azul-700) / 0.18),
+    0 4px 12px -4px hsl(0 0% 0% / 0.08);
+  padding: 18px 20px 16px;
+  max-width: 360px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.driver-popover.sebraiers-tour .driver-popover-title {
+  font-family: 'Figtree', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.3;
+  color: hsl(var(--text-primary));
+  margin: 0 0 6px;
+}
+
+.driver-popover.sebraiers-tour .driver-popover-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: hsl(var(--text-secondary));
+  margin: 0;
+}
+
+.driver-popover.sebraiers-tour .driver-popover-progress-text {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(var(--text-muted));
+  margin: 0 0 8px;
+}
+
+.driver-popover.sebraiers-tour button.driver-popover-next-btn,
+.driver-popover.sebraiers-tour button.driver-popover-done-btn {
+  background: hsl(var(--brand-azul-700));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.driver-popover.sebraiers-tour button.driver-popover-next-btn:hover,
+.driver-popover.sebraiers-tour button.driver-popover-done-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px hsl(var(--brand-azul-700) / 0.35);
+}
+
+.driver-popover.sebraiers-tour button.driver-popover-prev-btn {
+  background: transparent;
+  color: hsl(var(--text-secondary));
+  border: none;
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.driver-popover.sebraiers-tour button.driver-popover-close-btn {
+  color: hsl(var(--text-muted));
+}
+
+/* Skip link rendered as a ghost button left of "Próximo". */
+.driver-popover.sebraiers-tour .driver-popover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.driver-popover.sebraiers-tour [data-sebraiers-skip] {
+  background: transparent;
+  border: none;
+  color: hsl(var(--text-secondary));
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 10px;
+}
+
+.driver-popover.sebraiers-tour [data-sebraiers-skip]:hover {
+  color: hsl(var(--text-primary));
+}
+
+/* Mobile: edge-to-edge with margin. */
+@media (max-width: 640px) {
+  .driver-popover.sebraiers-tour {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+  .driver-popover.sebraiers-tour .driver-popover-progress-text {
+    margin-bottom: 4px;
+  }
+}
+
+/* Reduced motion: kill transitions on driver-injected elements. */
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.sebraiers-tour,
+  .driver-popover.sebraiers-tour * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
