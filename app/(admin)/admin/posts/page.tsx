@@ -1,3 +1,4 @@
+import { CoverImage } from '@/components/ui/cover-image';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -31,7 +32,7 @@ export default async function AdminPostsPage() {
           {(posts as Post[]).map((p) => (
             <Card key={p.id}>
               <CardBody className="flex items-center gap-4">
-                {p.cover_url && <img src={p.cover_url} alt="" className="h-14 w-14 rounded-md object-cover flex-shrink-0" />}
+                {p.cover_url && <CoverImage src={p.cover_url} alt="" className="h-14 w-14 rounded-md object-cover flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-caption text-text-secondary mb-1">
                     <NetworkIcon network={p.network} /> {NETWORK_LABELS[p.network]}

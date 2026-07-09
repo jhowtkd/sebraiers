@@ -1,3 +1,4 @@
+import { CoverImage } from '@/components/ui/cover-image';
 import Link from 'next/link';
 import { ArrowUpRight, Heart, MessageCircle, Repeat2, Clock } from 'lucide-react';
 import { NetworkIcon } from '@/components/ui/network-icon';
@@ -83,7 +84,7 @@ export function PostCard({ post, engagement }: Props) {
       <Link href={`/post/${post.id}`} className="block focus-visible:outline-none">
         <div className="relative aspect-[16/10] overflow-hidden bg-gradient-jacaranda-manaca">
           {post.cover_url ? (
-            <img
+            <CoverImage
               src={post.cover_url}
               alt=""
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-slower ease-out-quart group-hover:scale-[1.04]"

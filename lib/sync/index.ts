@@ -10,6 +10,8 @@ import {
   type NormalizedRow,
 } from './sheets';
 import { fetchOgImage } from './og-image';
+import { mirrorCoverToStorage } from '@/lib/cover-image-fetch';
+import { isMirroredCoverUrl, isProxyableCoverUrl } from '@/lib/cover-image';
 import { chunkArray, mapWithConcurrency } from './concurrency';
 
 export { parseColMap };
@@ -61,6 +63,11 @@ async function loadExistingByExternalId(
   return map;
 }
 
+async function resolveStoredCoverUrl(url: string | undefined): Promise<string | undefined> {
+  if (!url || isMirroredCoverUrl(url) || !isProxyableCoverUrl(url)) return url;
+  return (await mirrorCoverToStorage(url)) ?? url;
+}
+
 async function resolveCoverUrls(
   items: WorkItem[],
   existingById: Map<string, ExistingPost>,
@@ -69,7 +76,8 @@ async function resolveCoverUrls(
   const needsOg: WorkItem[] = [];
   for (const item of items) {
     const existing = existingById.get(item.external_id);
-    item.cover_url = item.row.cover_url ?? existing?.cover_url ?? undefined;
+    const initial = item.row.cover_url ?? existing?.cover_url ?? undefined;
+    item.cover_url = await resolveStoredCoverUrl(initial);
     if (!item.cover_url) needsOg.push(item);
   }
 
@@ -78,7 +86,7 @@ async function resolveCoverUrls(
   await mapWithConcurrency(needsOg, OG_FETCH_CONCURRENCY, async (item) => {
     const og = await fetchOgImage(item.row.original_url);
     if (og) {
-      item.cover_url = og;
+      item.cover_url = (await resolveStoredCoverUrl(og)) ?? og;
       summary.og_images_found++;
     }
   });

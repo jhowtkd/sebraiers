@@ -1,3 +1,4 @@
+import { CoverImage } from '@/components/ui/cover-image';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Sparkles } from 'lucide-react';
@@ -46,7 +47,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
       <article className="overflow-hidden rounded-3xl bg-surface-elevated border border-border-subtle shadow-xs">
         <div className="relative aspect-[16/9] sm:aspect-[21/9] overflow-hidden bg-gradient-jacaranda-manaca">
           {post.cover_url ? (
-            <img
+            <CoverImage
               src={post.cover_url}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"

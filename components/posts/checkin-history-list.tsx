@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/card';
+import { CoverImage } from '@/components/ui/cover-image';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { NetworkIcon } from '@/components/ui/network-icon';
 import { ReactionBar } from '@/components/social/reaction-bar';
@@ -67,7 +68,7 @@ export function CheckinHistoryList({
             <CardBody>
               <div className="flex items-center gap-4">
                 {it.post?.cover_url && (
-                  <img
+                  <CoverImage
                     src={it.post.cover_url}
                     alt=""
                     className="h-12 w-12 rounded-md object-cover flex-shrink-0"
