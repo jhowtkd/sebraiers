@@ -15,8 +15,10 @@ export function PostRowActions({ id, isActive }: { id: string; isActive: boolean
   function toggle() {
     start(async () => {
       const res = await togglePostActiveAction(id, !isActive);
-      if (res.ok) toast({ title: isActive ? 'Publicação desativada' : 'Publicação ativada', variant: 'success' });
-      else toast({ title: 'Erro', description: res.error, variant: 'error' });
+      if (res.ok) {
+        toast({ title: isActive ? 'Publicação desativada' : 'Publicação ativada', variant: 'success' });
+        router.refresh();
+      } else toast({ title: 'Erro', description: res.error, variant: 'error' });
     });
   }
   function remove() {

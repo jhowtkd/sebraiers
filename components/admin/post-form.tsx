@@ -7,7 +7,6 @@ import { createPostAction } from '@/app/actions/posts';
 import { PostFormFields } from '@/components/forms/post-form-fields';
 import { Button } from '@/components/ui/button';
 import type { ActionResult } from '@/app/actions/auth';
-import { useToast } from '@/components/ui/toast';
 
 function SubmitBtn({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -17,14 +16,12 @@ function SubmitBtn({ children }: { children: React.ReactNode }) {
 export function PostForm() {
   const { register } = useForm<PostInput>({ resolver: zodResolver(postSchema) });
   const [state, action] = useFormState<ActionResult | null, FormData>(createPostAction, null);
-  const { toast } = useToast();
 
   return (
-    <form action={action} className="space-y-4" onSubmit={() => state?.ok && toast({ title: 'Publicação criada', variant: 'success' })}>
+    <form action={action} className="space-y-4">
       <PostFormFields register={register} />
-      <input type="hidden" name="is_active" value="false" />
       <div className="flex items-center gap-2">
-        <input id="is_active" type="checkbox" {...register('is_active')} defaultChecked className="h-4 w-4" />
+        <input id="is_active" name="is_active" type="checkbox" defaultChecked className="h-4 w-4" />
         <label htmlFor="is_active" className="text-body-sm text-text-primary">Publicar imediatamente (ativa)</label>
       </div>
       {state && !state.ok && (

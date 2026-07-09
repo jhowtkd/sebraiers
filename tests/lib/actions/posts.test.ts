@@ -40,4 +40,25 @@ describe('createPostAction', () => {
     await expect(createPostAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/admin/posts');
     expect(insertCall).toBeGreaterThan(0);
   });
+
+  it('creates active post when checkbox is checked (hidden+checkbox form pattern)', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    let inserted: Record<string, unknown> | null = null;
+    fromMock.mockImplementation((table: string) => {
+      if (table !== 'posts') return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) };
+      return {
+        select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }),
+        insert: (row: Record<string, unknown>) => { inserted = row; return Promise.resolve({ error: null }); },
+      };
+    });
+    const fd = new FormData();
+    fd.append('is_active', 'false');
+    fd.append('is_active', 'on');
+    fd.set('title', 'Post ativo');
+    fd.set('network', 'instagram');
+    fd.set('original_url', 'https://instagram.com/p/x');
+    fd.set('published_at', '2026-06-21T00:00');
+    await expect(createPostAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/admin/posts');
+    expect(inserted?.is_active).toBe(true);
+  });
 });
