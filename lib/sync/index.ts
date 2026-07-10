@@ -11,7 +11,7 @@ import {
 } from './sheets';
 import { fetchOgImage } from './og-image';
 import { mirrorCoverToStorage } from '@/lib/cover-image-fetch';
-import { isMirroredCoverUrl, isProxyableCoverUrl } from '@/lib/cover-image';
+import { isMirroredCoverUrl, isProxyableCoverUrl, normalizeCoverUrl } from '@/lib/cover-image';
 import { chunkArray, mapWithConcurrency } from './concurrency';
 
 export { parseColMap };
@@ -63,9 +63,15 @@ async function loadExistingByExternalId(
   return map;
 }
 
+function coverStillOnCdn(url: string | undefined): boolean {
+  return Boolean(url && isProxyableCoverUrl(url) && !isMirroredCoverUrl(url));
+}
+
 async function resolveStoredCoverUrl(url: string | undefined): Promise<string | undefined> {
-  if (!url || isMirroredCoverUrl(url) || !isProxyableCoverUrl(url)) return url;
-  return (await mirrorCoverToStorage(url)) ?? url;
+  if (!url) return undefined;
+  const normalized = normalizeCoverUrl(url);
+  if (isMirroredCoverUrl(normalized) || !isProxyableCoverUrl(normalized)) return normalized;
+  return (await mirrorCoverToStorage(normalized)) ?? undefined;
 }
 
 async function resolveCoverUrls(
@@ -78,17 +84,16 @@ async function resolveCoverUrls(
     const existing = existingById.get(item.external_id);
     const initial = item.row.cover_url ?? existing?.cover_url ?? undefined;
     item.cover_url = await resolveStoredCoverUrl(initial);
-    if (!item.cover_url) needsOg.push(item);
+    if (!item.cover_url || coverStillOnCdn(item.cover_url)) needsOg.push(item);
   }
 
   if (needsOg.length === 0) return;
 
   await mapWithConcurrency(needsOg, OG_FETCH_CONCURRENCY, async (item) => {
     const og = await fetchOgImage(item.row.original_url);
-    if (og) {
-      item.cover_url = (await resolveStoredCoverUrl(og)) ?? og;
-      summary.og_images_found++;
-    }
+    if (!og) return;
+    item.cover_url = await resolveStoredCoverUrl(og);
+    if (item.cover_url) summary.og_images_found++;
   });
 }
 

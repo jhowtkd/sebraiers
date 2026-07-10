@@ -1,4 +1,5 @@
 import 'server-only';
+import { normalizeCoverUrl } from '@/lib/cover-image';
 
 // Hosts permitted for OG image fetching. Limited to the social networks
 // the product syncs from. Anything else (incl. internal/SSRF targets like
@@ -19,6 +20,8 @@ const ALLOWED_HOSTS = new Set([
   'youtu.be',
   'threads.net',
   'www.threads.net',
+  'threads.com',
+  'www.threads.com',
 ]);
 
 function isAllowedHost(url: string): boolean {
@@ -44,7 +47,10 @@ export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<strin
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SEBRAEIERS-Sync/1.0)' },
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
       signal: controller.signal,
       redirect: 'follow',
     });
@@ -57,7 +63,7 @@ export async function fetchOgImage(url: string, timeoutMs = 5000): Promise<strin
     ];
     for (const re of patterns) {
       const m = html.match(re);
-      if (m && isValidPostImage(m[1])) return m[1];
+      if (m && isValidPostImage(m[1])) return normalizeCoverUrl(m[1]);
     }
     return null;
   } catch {

@@ -1,6 +1,11 @@
 import 'server-only';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { isMirroredCoverUrl, isProxyableCoverUrl } from '@/lib/cover-image';
+import {
+  isMirroredCoverUrl,
+  isProxyableCoverUrl,
+  normalizeCoverUrl,
+} from '@/lib/cover-image';
+import { fetchOgImage } from '@/lib/sync/og-image';
 
 function refererForUrl(url: string): string {
   const host = new URL(url).hostname.toLowerCase();
@@ -42,7 +47,8 @@ export async function fetchCoverImage(
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SEBRAEIERS/1.0)',
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         Referer: refererForUrl(url),
         Accept: 'image/*,*/*',
       },
@@ -60,13 +66,14 @@ export async function fetchCoverImage(
 }
 
 export async function mirrorCoverToStorage(sourceUrl: string): Promise<string | null> {
-  if (isMirroredCoverUrl(sourceUrl) || !isProxyableCoverUrl(sourceUrl)) return sourceUrl;
+  const normalized = normalizeCoverUrl(sourceUrl);
+  if (isMirroredCoverUrl(normalized) || !isProxyableCoverUrl(normalized)) return normalized;
 
-  const fetched = await fetchCoverImage(sourceUrl);
+  const fetched = await fetchCoverImage(normalized);
   if (!fetched) return null;
 
   const admin = getAdminClient();
-  const ext = extensionFromContentType(fetched.contentType) ?? extensionFromUrl(sourceUrl) ?? 'jpg';
+  const ext = extensionFromContentType(fetched.contentType) ?? extensionFromUrl(normalized) ?? 'jpg';
   const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const { error } = await admin.storage.from('post-covers').upload(path, fetched.body, {
     contentType: fetched.contentType,
@@ -75,4 +82,55 @@ export async function mirrorCoverToStorage(sourceUrl: string): Promise<string | 
 
   const { data } = admin.storage.from('post-covers').getPublicUrl(path);
   return data.publicUrl;
+}
+
+async function fetchPublicImage(
+  url: string,
+): Promise<{ body: ArrayBuffer; contentType: string } | null> {
+  try {
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg';
+    if (!contentType.startsWith('image/')) return null;
+    return { body: await res.arrayBuffer(), contentType };
+  } catch {
+    return null;
+  }
+}
+
+export async function resolvePostCoverImage(
+  postId: string,
+): Promise<{ body: ArrayBuffer; contentType: string } | null> {
+  const admin = getAdminClient();
+  const { data: post, error } = await admin
+    .from('posts')
+    .select('id, cover_url, original_url')
+    .eq('id', postId)
+    .maybeSingle();
+  if (error || !post) return null;
+
+  const stored = post.cover_url ? normalizeCoverUrl(post.cover_url) : null;
+
+  if (stored && isMirroredCoverUrl(stored)) {
+    const mirrored = await fetchPublicImage(stored);
+    if (mirrored) return mirrored;
+  }
+
+  if (stored && isProxyableCoverUrl(stored)) {
+    const proxied = await fetchCoverImage(stored);
+    if (proxied) return proxied;
+  }
+
+  const og = await fetchOgImage(post.original_url);
+  if (!og) return null;
+
+  const mirroredUrl = await mirrorCoverToStorage(og);
+  if (mirroredUrl && isMirroredCoverUrl(mirroredUrl)) {
+    await admin.from('posts').update({ cover_url: mirroredUrl }).eq('id', postId);
+    const mirrored = await fetchPublicImage(mirroredUrl);
+    if (mirrored) return mirrored;
+  }
+
+  const normalizedOg = normalizeCoverUrl(og);
+  return fetchCoverImage(normalizedOg);
 }

@@ -1,6 +1,7 @@
 import 'server-only';
 import Papa from 'papaparse';
 import type { Network } from '@/lib/types';
+import { normalizeCoverUrl } from '@/lib/cover-image';
 
 export type SheetRow = Record<string, string>;
 
@@ -183,7 +184,7 @@ export function parseColumns(
       description,
       published_at,
       network,
-      cover_url,
+      cover_url: cover_url ? normalizeCoverUrl(cover_url) : undefined,
     };
     out.push(normalized);
   }

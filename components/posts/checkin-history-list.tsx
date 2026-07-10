@@ -70,6 +70,7 @@ export function CheckinHistoryList({
                 {it.post?.cover_url && (
                   <CoverImage
                     src={it.post.cover_url}
+                    postId={it.post.id}
                     alt=""
                     className="h-12 w-12 rounded-md object-cover flex-shrink-0"
                   />

@@ -9,9 +9,9 @@ beforeEach(() => { fetchMock.mockReset(); });
 
 describe('fetchOgImage', () => {
   it('extracts og:image from HTML', async () => {
-    const html = '<html><head><meta property="og:image" content="https://cdn.example.com/img.jpg"></head></html>';
+    const html = '<html><head><meta property="og:image" content="https://cdn.example.com/img.jpg?a=1&amp;b=2"></head></html>';
     fetchMock.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(html) });
-    expect(await fetchOgImage('https://www.instagram.com/p/1')).toBe('https://cdn.example.com/img.jpg');
+    expect(await fetchOgImage('https://www.instagram.com/p/1')).toBe('https://cdn.example.com/img.jpg?a=1&b=2');
   });
 
   it('extracts og:image when attribute order is swapped (content before property)', async () => {
@@ -49,6 +49,15 @@ describe('fetchOgImage host allowlist', () => {
     );
     const result = await fetchOgImage('https://www.instagram.com/p/abc/');
     expect(result).toBe('https://cdn.inst.com/img.jpg');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows threads.com posts', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('<html><meta property="og:image" content="https://cdn.threads.com/img.jpg" /></html>', { status: 200 })
+    );
+    const result = await fetchOgImage('https://www.threads.com/@user/post/abc');
+    expect(result).toBe('https://cdn.threads.com/img.jpg');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

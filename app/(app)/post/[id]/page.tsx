@@ -49,6 +49,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           {post.cover_url ? (
             <CoverImage
               src={post.cover_url}
+              postId={post.id}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
             />

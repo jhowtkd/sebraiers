@@ -86,6 +86,7 @@ export function PostCard({ post, engagement }: Props) {
           {post.cover_url ? (
             <CoverImage
               src={post.cover_url}
+              postId={post.id}
               alt=""
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-slower ease-out-quart group-hover:scale-[1.04]"
             />
