@@ -10,6 +10,9 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/admin', () => ({
   getAdminClient: () => ({ storage: { from: () => ({ upload: vi.fn().mockResolvedValue({ error: null }), getPublicUrl: () => ({ data: { publicUrl: 'https://x' } }) }) } }),
 }));
+vi.mock('@/lib/cover-image-fetch', () => ({
+  mirrorCoverToStorage: vi.fn().mockResolvedValue(null),
+}));
 
 import { createPostAction } from '@/app/actions/posts';
 
@@ -60,5 +63,25 @@ describe('createPostAction', () => {
     fd.set('published_at', '2026-06-21T00:00');
     await expect(createPostAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/admin/posts');
     expect(inserted?.is_active).toBe(true);
+  });
+
+  it('uploads cover_file when present in FormData', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    let inserted: Record<string, unknown> | null = null;
+    fromMock.mockImplementation((table: string) => {
+      if (table !== 'posts') return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) };
+      return {
+        select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }),
+        insert: (row: Record<string, unknown>) => { inserted = row; return Promise.resolve({ error: null }); },
+      };
+    });
+    const fd = new FormData();
+    fd.set('title', 'Com capa');
+    fd.set('network', 'instagram');
+    fd.set('original_url', 'https://instagram.com/p/x');
+    fd.set('published_at', '2026-06-21T00:00');
+    fd.set('cover_file', new File([new Uint8Array([1, 2, 3])], 'capa.jpg', { type: 'image/jpeg' }));
+    await expect(createPostAction(null, fd)).rejects.toThrow('NEXT_REDIRECT:/admin/posts');
+    expect(inserted?.cover_url).toBe('https://x');
   });
 });

@@ -36,7 +36,12 @@ export function PostFormFields({ register }: { register: UseFormRegister<PostInp
       </div>
       <div>
         <Label htmlFor="cover_file">Imagem de capa (opcional, máx 5MB)</Label>
-        <Input id="cover_file" type="file" accept="image/jpeg,image/png,image/webp" />
+        <Input
+          id="cover_file"
+          name="cover_file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+        />
         <p className="text-caption text-text-muted mt-1">Ou cole uma URL abaixo.</p>
         <Input id="cover_url" type="url" placeholder="https://…" {...register('cover_url')} className="mt-2" />
       </div>

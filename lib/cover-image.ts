@@ -59,14 +59,11 @@ export function coverImageSrc(
 ): string | undefined {
   if (!url) return undefined;
   const normalized = normalizeCoverUrl(url);
-  const mirrored = isMirroredCoverUrl(normalized);
-  const proxyable = isProxyableCoverUrl(normalized);
-  const resolved = mirrored
-    ? normalized
-    : postId
-      ? `/api/cover-image?postId=${encodeURIComponent(postId)}`
-      : proxyable
-        ? `/api/cover-image?url=${encodeURIComponent(normalized)}`
-        : normalized;
-  return resolved;
+  if (isMirroredCoverUrl(normalized)) return normalized;
+  // Only proxy CDN hosts that block hotlinking. Public URLs (and pasted
+  // https links) must stay direct — routing them through postId made the
+  // proxy return 502 even when the original image was fine.
+  if (!isProxyableCoverUrl(normalized)) return normalized;
+  if (postId) return `/api/cover-image?postId=${encodeURIComponent(postId)}`;
+  return `/api/cover-image?url=${encodeURIComponent(normalized)}`;
 }

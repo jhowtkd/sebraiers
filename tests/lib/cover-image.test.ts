@@ -49,6 +49,11 @@ describe('cover-image', () => {
     expect(coverImageSrc(cdn, 'post-123')).toBe('/api/cover-image?postId=post-123');
   });
 
+  it('does not proxy public non-CDN URLs even when postId is set', () => {
+    const url = 'https://images.example.com/cover.jpg';
+    expect(coverImageSrc(url, 'post-123')).toBe(url);
+  });
+
   it('returns custom URLs unchanged', () => {
     const url = 'https://images.example.com/cover.jpg';
     expect(coverImageSrc(url)).toBe(url);

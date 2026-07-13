@@ -5,9 +5,35 @@ import { redirect } from 'next/navigation';
 import { postSchema } from '@/lib/validation';
 import type { ActionResult } from '@/app/actions/auth';
 import { requireAdminOrFail, fileFromFormData, uploadPostCover } from '@/app/actions/_shared/admin-guard';
+import { isMirroredCoverUrl, isProxyableCoverUrl, normalizeCoverUrl } from '@/lib/cover-image';
+import { mirrorCoverToStorage } from '@/lib/cover-image-fetch';
 
 function parseIsActive(formData: FormData): boolean {
   return formData.getAll('is_active').some((v) => v === 'on' || v === 'true');
+}
+
+/** Prefer Storage upload; otherwise persist a durable URL when the CDN can be mirrored. */
+async function resolveCoverUrlForSave(
+  file: File | null,
+  pastedUrl: string | null | undefined,
+): Promise<{ ok: true; cover_url: string | null } | { ok: false; error: string }> {
+  if (file) {
+    const uploaded = await uploadPostCover(file);
+    if (uploaded === null) return { ok: false, error: 'Falha no upload da imagem' };
+    return { ok: true, cover_url: uploaded };
+  }
+
+  if (!pastedUrl) return { ok: true, cover_url: null };
+
+  const normalized = normalizeCoverUrl(pastedUrl);
+  if (isMirroredCoverUrl(normalized) || !isProxyableCoverUrl(normalized)) {
+    return { ok: true, cover_url: normalized };
+  }
+
+  const mirrored = await mirrorCoverToStorage(normalized);
+  // Keep the pasted CDN URL if mirroring fails (e.g. expired signature) so the
+  // admin can still save and replace the cover later via file upload.
+  return { ok: true, cover_url: mirrored ?? normalized };
 }
 
 export async function createPostAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -27,12 +53,8 @@ export async function createPostAction(_prev: ActionResult | null, formData: For
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' };
 
   const cover = fileFromFormData(formData, 'cover_file');
-  let cover_url = parsed.data.cover_url ?? null;
-  if (cover) {
-    const uploaded = await uploadPostCover(cover);
-    if (uploaded === null) return { ok: false, error: 'Falha no upload da imagem' };
-    cover_url = uploaded;
-  }
+  const resolved = await resolveCoverUrlForSave(cover, parsed.data.cover_url);
+  if (!resolved.ok) return resolved;
 
   const { error } = await supabase.from('posts').insert({
     title: parsed.data.title,
@@ -40,7 +62,7 @@ export async function createPostAction(_prev: ActionResult | null, formData: For
     network: parsed.data.network,
     original_url: parsed.data.original_url,
     published_at: new Date(parsed.data.published_at).toISOString(),
-    cover_url,
+    cover_url: resolved.cover_url,
     is_active: parsed.data.is_active,
     created_by: user.id,
   });
@@ -68,12 +90,8 @@ export async function updatePostAction(id: string, _prev: ActionResult | null, f
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' };
 
   const cover = fileFromFormData(formData, 'cover_file');
-  let cover_url = parsed.data.cover_url ?? null;
-  if (cover) {
-    const uploaded = await uploadPostCover(cover);
-    if (uploaded === null) return { ok: false, error: 'Falha no upload da imagem' };
-    cover_url = uploaded;
-  }
+  const resolved = await resolveCoverUrlForSave(cover, parsed.data.cover_url);
+  if (!resolved.ok) return resolved;
 
   const { error } = await supabase.from('posts').update({
     title: parsed.data.title,
@@ -81,7 +99,7 @@ export async function updatePostAction(id: string, _prev: ActionResult | null, f
     network: parsed.data.network,
     original_url: parsed.data.original_url,
     published_at: new Date(parsed.data.published_at).toISOString(),
-    cover_url,
+    cover_url: resolved.cover_url,
     is_active: parsed.data.is_active,
     updated_at: new Date().toISOString(),
   }).eq('id', id);
