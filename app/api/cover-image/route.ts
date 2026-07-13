@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (postId) {
     const image = await resolvePostCoverImage(postId);
     if (!image) {
-      return NextResponse.json({ error: 'unavailable' }, { status: 502 });
+      return NextResponse.json({ error: 'unavailable' }, { status: 404 });
     }
     return imageResponse(image);
   }
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   const image = await fetchCoverImage(url);
   if (!image) {
-    return NextResponse.json({ error: 'unavailable' }, { status: 502 });
+    return NextResponse.json({ error: 'unavailable' }, { status: 404 });
   }
 
   return imageResponse(image);

@@ -122,7 +122,13 @@ export async function resolvePostCoverImage(
   }
 
   const og = await fetchOgImage(post.original_url);
-  if (!og) return null;
+  if (!og) {
+    // Dead CDN + no OG: drop the broken cover so the UI stops hammering the proxy.
+    if (stored && isProxyableCoverUrl(stored) && !isMirroredCoverUrl(stored)) {
+      await admin.from('posts').update({ cover_url: null }).eq('id', postId);
+    }
+    return null;
+  }
 
   const mirroredUrl = await mirrorCoverToStorage(og);
   if (mirroredUrl && isMirroredCoverUrl(mirroredUrl)) {
